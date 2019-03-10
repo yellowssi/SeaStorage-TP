@@ -2,12 +2,16 @@ package storage
 
 import (
 	"errors"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/lib/crypto"
 	"strings"
 )
 
-type Address string
 type Hash string
-type FileKey string
+type FileKey struct {
+	Used uint
+	Key  crypto.Key
+}
+type FileKeyIndex int
 
 type INode interface {
 	GetName() string
@@ -21,7 +25,7 @@ type File struct {
 	Name       string
 	Size       uint
 	Hash       Hash
-	Key        FileKey
+	Key        FileKeyIndex
 	Fragments  []*Fragment
 	SharedPath string
 }
@@ -40,7 +44,7 @@ type Fragment struct {
 }
 
 type FragmentSea struct {
-	Address Address
+	Address crypto.Address
 	Weight  int8
 }
 
@@ -50,7 +54,11 @@ type INodeInfo struct {
 	Hash Hash
 }
 
-func NewFile(name string, size uint, hash Hash, key FileKey, fragments []*Fragment) *File {
+func NewFileKey(key crypto.Key) *FileKey {
+	return &FileKey{Key: key, Used: 0}
+}
+
+func NewFile(name string, size uint, hash Hash, key FileKeyIndex, fragments []*Fragment) *File {
 	return &File{Name: name, Size: size, Hash: hash, Key: key, Fragments: fragments, SharedPath: ""}
 }
 
@@ -62,7 +70,7 @@ func NewFragment(hash Hash, seas []*FragmentSea) *Fragment {
 	return &Fragment{Hash: hash, Seas: seas}
 }
 
-func NewFragmentSea(address Address) *FragmentSea {
+func NewFragmentSea(address crypto.Address) *FragmentSea {
 	return &FragmentSea{Address: address, Weight: 0}
 }
 
@@ -275,17 +283,17 @@ func (d *Directory) DeleteDirectory(path string, name string) (err error) {
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(path string, file *File) error {
+func (d *Directory) CreateFile(path string, name string, size uint, hash Hash, key FileKeyIndex, fragments []*Fragment) error {
 	err, dir := d.CheckPathExists(path)
 	if err != nil {
 		return err
 	}
 	for i := 0; i < len(dir.INodes); i++ {
-		if dir.INodes[i].GetName() == file.Name {
-			return errors.New("The same name file or directory exists: " + path + file.Name)
+		if dir.INodes[i].GetName() == name {
+			return errors.New("The same name file or directory exists: " + path + name)
 		}
 	}
-	dir.INodes = append(dir.INodes, file)
+	dir.INodes = append(dir.INodes, NewFile(name, size, hash, key, fragments))
 	d.UpdateDirectorySize(path)
 	return nil
 }
@@ -301,25 +309,27 @@ func (d *Directory) UpdateFileName(path string, name string, newName string) err
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(path string, file *File) error {
-	err, dir := d.CheckPathExists(path)
+func (d *Directory) UpdateFileData(path string, name string, size uint, hash Hash, fragments []*Fragment) error {
+	err, file := d.CheckFileExists(path, name)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(dir.INodes); i++ {
-		switch dir.INodes[i].(type) {
-		case *File:
-			if dir.INodes[i].GetName() == file.Name {
-				dir.INodes[i] = file
-				d.UpdateDirectorySize(path)
-				return nil
-			}
-			break
-		default:
-			break
-		}
+	file.Size = size
+	file.Hash = hash
+	file.Fragments = fragments
+	return nil
+}
+
+// Update the key of file
+func (d *Directory) UpdateFileKey(path string, name string, key FileKeyIndex, hash Hash, fragment []*Fragment) error {
+	err, file := d.CheckFileExists(path, name)
+	if err != nil {
+		return err
 	}
-	return errors.New("File doesn't exists: " + path + file.Name)
+	file.Key = key
+	file.Hash = hash
+	file.Fragments = fragment
+	return nil
 }
 
 // Delete the file finding by the name under the path.

@@ -2,12 +2,14 @@ package storage
 
 import (
 	"errors"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/lib/crypto"
 	"strings"
 )
 
 type Root struct {
 	Home   *Directory
 	Shared *Directory
+	Keys []*FileKey
 }
 
 // Check the path whether valid.
@@ -42,33 +44,46 @@ func ValidName(name string) error {
 	return nil
 }
 
-func GenerateFile(name string, size uint, hash Hash, key FileKey, fragments []*Fragment) (error, *File) {
-	err := ValidName(name)
-	if err != nil {
-		return err, nil
-	}
-	if len(fragments) == 0 {
-		return errors.New("File should contains storage address for store data. "), nil
-	}
-	for _, fragment := range fragments {
-		if len(fragment.Seas) == 0 {
-			return errors.New("File should contains storage address for store data. "), nil
-		}
-	}
-	return nil, NewFile(name, size, hash, key, fragments)
-}
-
-func (root *Root) UploadFile(path string,
-	name string, size uint, hash Hash, key FileKey, fragments []*Fragment) error {
+func ValidFile(path string, name string, fragments []*Fragment) error {
 	err := ValidPath(path)
 	if err != nil {
 		return err
 	}
-	err, file := GenerateFile(name, size, hash, key, fragments)
+	err = ValidName(name)
 	if err != nil {
 		return err
 	}
-	return root.Home.CreateFile(path, file)
+	if len(fragments) == 0 {
+		return errors.New("File should contain storage address(es) for store data. ")
+	}
+	for _, fragment := range fragments {
+		if len(fragment.Seas) == 0 {
+			return errors.New("File should contain storage address(es) for store data. ")
+		}
+	}
+	return nil
+}
+
+func (root *Root) SearchKey(key crypto.Key, create bool) FileKeyIndex {
+	for i, fileKey := range root.Keys {
+		if fileKey.Key == key {
+			return FileKeyIndex(i)
+		}
+	}
+	if create {
+		root.Keys = append(root.Keys, NewFileKey(key))
+		return FileKeyIndex(len(root.Keys) - 1)
+	}
+	return FileKeyIndex(-1)
+}
+
+func (root *Root) UploadFile(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
+	err := ValidFile(path, name, fragments)
+	if err != nil {
+		return err
+	}
+	fileKeyIndex := root.SearchKey(key, true)
+	return root.Home.CreateFile(path, name, size, hash, fileKeyIndex, fragments)
 }
 
 func (root *Root) UpdateFileName(path string, name string, newName string) error {
@@ -87,17 +102,28 @@ func (root *Root) UpdateFileName(path string, name string, newName string) error
 	return root.Home.UpdateFileName(path, name, newName)
 }
 
-func (root *Root) UpdateFileData(path string,
-	name string, size uint, hash Hash, key FileKey, fragments []*Fragment) error {
-	err := ValidPath(path)
+func (root *Root) UpdateFileData(path string, name string, size uint, hash Hash, fragments []*Fragment) error {
+	err := ValidFile(path, name, fragments)
 	if err != nil {
 		return err
 	}
-	err, file := GenerateFile(name, size, hash, key, fragments)
+	return root.Home.UpdateFileData(path, name, size, hash, fragments)
+}
+
+func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
+	err := ValidFile(path, name, fragments)
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileData(path, file)
+	return root.UpdateFileKey(path, name, size, hash, key, fragments)
+}
+
+func (root *Root) PublicKey(address crypto.Address, index FileKeyIndex, key crypto.Key) error {
+	target := root.Keys[index]
+	if target.Key.Verify(address, key) {
+		target.Key = key
+	}
+	return nil
 }
 
 func (root *Root) DeleteFile(path string, name string) error {

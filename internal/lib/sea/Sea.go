@@ -1,15 +1,16 @@
 package sea
 
-type Hash [512]byte
+import "time"
 
 type Sea struct {
 	TotalSpace uint
 	FreeSpace  uint
 }
 
-type SeaFragment struct {
-	hash Hash
+type Fragment struct {
+	Timestamp time.Time
+	Data []byte
 }
 
-type SeaBlock struct {
+type Block struct {
 }
