@@ -11,7 +11,6 @@ type FileKey struct {
 	Used uint
 	Key  crypto.Key
 }
-type FileKeyIndex int
 
 type INode interface {
 	GetName() string
@@ -25,7 +24,7 @@ type File struct {
 	Name       string
 	Size       uint
 	Hash       Hash
-	Key        FileKeyIndex
+	KeyIndex   Hash
 	Fragments  []*Fragment
 	SharedPath string
 }
@@ -58,8 +57,8 @@ func NewFileKey(key crypto.Key) *FileKey {
 	return &FileKey{Key: key, Used: 0}
 }
 
-func NewFile(name string, size uint, hash Hash, key FileKeyIndex, fragments []*Fragment) *File {
-	return &File{Name: name, Size: size, Hash: hash, Key: key, Fragments: fragments, SharedPath: ""}
+func NewFile(name string, size uint, hash Hash, key Hash, fragments []*Fragment) *File {
+	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments, SharedPath: ""}
 }
 
 func NewDirectory(name string) *Directory {
@@ -258,32 +257,52 @@ func (d *Directory) UpdateDirectoryName(path string, name string) (err error) {
 	return
 }
 
+// Delete directory key.
+func (d *Directory) DeleteDirectoryKey() (operations map[Hash]uint) {
+	for _, iNode := range d.INodes {
+		switch iNode.(type) {
+		case *Directory:
+			for k, v := range iNode.(*Directory).DeleteDirectoryKey() {
+				operations[k] += v
+			}
+			break
+		case *File:
+			file := iNode.(*File)
+			operations[file.KeyIndex]--
+			break
+		default:
+			break
+		}
+	}
+	return operations
+}
+
 // Delete iNode of the directory finding by the path.
-func (d *Directory) DeleteDirectory(path string, name string) (err error) {
+func (d *Directory) DeleteDirectory(path string, name string) (err error, operations map[Hash]uint) {
 	err, dir := d.CheckPathExists(path)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *Directory:
 			if dir.INodes[i].GetName() == name {
+				operations = dir.INodes[i].(*Directory).DeleteDirectoryKey()
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
 				d.UpdateDirectorySize(path)
+				return nil, operations
 			}
-			return
+			break
 		default:
-			if i == len(dir.INodes)-1 {
-				err = errors.New("Path doesn't exists: " + path + name + "/")
-			}
 			break
 		}
 	}
-	return
+	err = errors.New("Path doesn't exists: " + path + name + "/")
+	return err, nil
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(path string, name string, size uint, hash Hash, key FileKeyIndex, fragments []*Fragment) error {
+func (d *Directory) CreateFile(path string, name string, size uint, hash Hash, keyHash Hash, fragments []*Fragment) error {
 	err, dir := d.CheckPathExists(path)
 	if err != nil {
 		return err
@@ -293,7 +312,7 @@ func (d *Directory) CreateFile(path string, name string, size uint, hash Hash, k
 			return errors.New("The same name file or directory exists: " + path + name)
 		}
 	}
-	dir.INodes = append(dir.INodes, NewFile(name, size, hash, key, fragments))
+	dir.INodes = append(dir.INodes, NewFile(name, size, hash, keyHash, fragments))
 	d.UpdateDirectorySize(path)
 	return nil
 }
@@ -321,37 +340,40 @@ func (d *Directory) UpdateFileData(path string, name string, size uint, hash Has
 }
 
 // Update the key of file
-func (d *Directory) UpdateFileKey(path string, name string, key FileKeyIndex, hash Hash, fragment []*Fragment) error {
+func (d *Directory) UpdateFileKey(path string, name string, keyHash Hash, hash Hash, fragments []*Fragment) (err error, operations map[Hash]int) {
 	err, file := d.CheckFileExists(path, name)
 	if err != nil {
-		return err
+		return err, operations
 	}
-	file.Key = key
+	operations[file.KeyIndex]--
+	file.KeyIndex = keyHash
 	file.Hash = hash
-	file.Fragments = fragment
-	return nil
+	file.Fragments = fragments
+	operations[keyHash]++
+	return nil, operations
 }
 
 // Delete the file finding by the name under the path.
-func (d *Directory) DeleteFile(path string, name string) error {
+func (d *Directory) DeleteFile(path string, name string) (err error, hash Hash) {
 	err, dir := d.CheckPathExists(path)
 	if err != nil {
-		return err
+		return err, hash
 	}
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *File:
-			if dir.INodes[i].GetName() == name {
+			file := dir.INodes[i].(*File)
+			if file.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
 				d.UpdateDirectorySize(path)
-				return nil
+				return nil, file.KeyIndex
 			}
 			break
 		default:
 			break
 		}
 	}
-	return errors.New("File doesn't exists: " + path + name)
+	return errors.New("File doesn't exists: " + path + name), hash
 }
 
 // List information of iNodes in the path.

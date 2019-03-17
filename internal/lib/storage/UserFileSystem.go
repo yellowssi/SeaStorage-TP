@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/lib/crypto"
 	"strings"
@@ -9,7 +11,7 @@ import (
 type Root struct {
 	Home   *Directory
 	Shared *Directory
-	Keys []*FileKey
+	Keys map[Hash]*FileKey
 }
 
 // Check the path whether valid.
@@ -64,17 +66,17 @@ func ValidFile(path string, name string, fragments []*Fragment) error {
 	return nil
 }
 
-func (root *Root) SearchKey(key crypto.Key, create bool) FileKeyIndex {
-	for i, fileKey := range root.Keys {
-		if fileKey.Key == key {
-			return FileKeyIndex(i)
-		}
+func (root *Root) SearchKey(key crypto.Key, used bool) (hash Hash) {
+	keyBytes, _ := hex.DecodeString(string(key))
+	keyString := sha256.Sum256(keyBytes)
+	keyIndex := hex.EncodeToString(keyString[:])
+	fileKey := root.Keys[Hash(keyIndex)]
+	if fileKey != nil {
+		return Hash(keyIndex)
+	} else if used {
+		return Hash(keyIndex)
 	}
-	if create {
-		root.Keys = append(root.Keys, NewFileKey(key))
-		return FileKeyIndex(len(root.Keys) - 1)
-	}
-	return FileKeyIndex(-1)
+	return hash
 }
 
 func (root *Root) UploadFile(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
@@ -118,8 +120,8 @@ func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, 
 	return root.UpdateFileKey(path, name, size, hash, key, fragments)
 }
 
-func (root *Root) PublicKey(address crypto.Address, index FileKeyIndex, key crypto.Key) error {
-	target := root.Keys[index]
+func (root *Root) PublicKey(address crypto.Address, keyHash Hash, key crypto.Key) error {
+	target := root.Keys[keyHash]
 	if target.Key.Verify(address, key) {
 		target.Key = key
 	}
@@ -145,9 +147,13 @@ func (root *Root) DeleteFile(path string, name string) error {
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err = root.Shared.DeleteFile(sharedPath, name)
+					err, keyIndex := root.Shared.DeleteFile(sharedPath, name)
 					if err != nil {
 						return err
+					}
+					root.Keys[keyIndex].Used--
+					if root.Keys[keyIndex].Used == 0 {
+						delete(root.Keys, keyIndex)
 					}
 				}
 			}
@@ -188,9 +194,12 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err = root.Shared.DeleteDirectory(sharedPath, name)
+					err, operations := root.Shared.DeleteDirectory(sharedPath, name)
 					if err != nil {
 						return err
+					}
+					for k, v := range operations {
+						root.Keys[k].Used -= v
 					}
 				}
 			}
