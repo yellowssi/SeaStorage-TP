@@ -133,19 +133,16 @@ func (d *Directory) CheckPathExists(path string) (error, *Directory) {
 		if len(dir.INodes) == 0 {
 			return errors.New("Path doesn't exists: " + strings.Join(pathParams[:i], "/") + "/"), nil
 		}
-	L:
 		for j := 0; j < len(dir.INodes); j++ {
 			switch dir.INodes[j].(type) {
 			case *Directory:
 				if dir.INodes[j].GetName() == pathParams[i] {
 					dir = dir.INodes[j].(*Directory)
 				}
-				continue L
 			default:
 				if j == len(dir.INodes)-1 {
 					return errors.New("Path doesn't exists: " + strings.Join(pathParams[:i], "/") + "/"), nil
 				}
-				break
 			}
 		}
 	}
@@ -166,9 +163,7 @@ func (d *Directory) CheckFileExists(path string, name string) (error, *File) {
 			if iNode.GetName() == name {
 				return nil, iNode.(*File)
 			}
-			break
 		default:
-			break
 		}
 	}
 	return errors.New("File doesn't exists: " + path + name), nil
@@ -243,6 +238,7 @@ func (d *Directory) UpdateDirectorySize(path string) {
 				d.INodes[i].(*Directory).UpdateDirectorySize(subPath)
 			}
 			d.Size += d.INodes[i].GetSize()
+		default:
 		}
 	}
 }
@@ -265,13 +261,10 @@ func (d *Directory) DeleteDirectoryKey() (operations map[Hash]uint) {
 			for k, v := range iNode.(*Directory).DeleteDirectoryKey() {
 				operations[k] += v
 			}
-			break
 		case *File:
 			file := iNode.(*File)
 			operations[file.KeyIndex]--
-			break
 		default:
-			break
 		}
 	}
 	return operations
@@ -292,9 +285,7 @@ func (d *Directory) DeleteDirectory(path string, name string) (err error, operat
 				d.UpdateDirectorySize(path)
 				return nil, operations
 			}
-			break
 		default:
-			break
 		}
 	}
 	err = errors.New("Path doesn't exists: " + path + name + "/")
@@ -368,9 +359,7 @@ func (d *Directory) DeleteFile(path string, name string) (err error, hash Hash) 
 				d.UpdateDirectorySize(path)
 				return nil, file.KeyIndex
 			}
-			break
 		default:
-			break
 		}
 	}
 	return errors.New("File doesn't exists: " + path + name), hash

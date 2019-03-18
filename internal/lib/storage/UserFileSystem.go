@@ -11,7 +11,7 @@ import (
 type Root struct {
 	Home   *Directory
 	Shared *Directory
-	Keys map[Hash]*FileKey
+	Keys   map[Hash]*FileKey
 }
 
 // Check the path whether valid.
@@ -160,7 +160,6 @@ func (root *Root) DeleteFile(path string, name string) error {
 			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
 			return nil
 		default:
-			break
 		}
 	}
 	return errors.New("File doesn't exists: " + path + name)
@@ -206,7 +205,6 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
 			return nil
 		default:
-			break
 		}
 	}
 	return errors.New("Path doesn't exists: " + path + name + "/")
