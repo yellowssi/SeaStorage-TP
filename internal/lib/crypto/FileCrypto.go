@@ -8,9 +8,6 @@ import (
 	ellcurv "github.com/btcsuite/btcd/btcec"
 )
 
-type Address string
-type Key string
-
 func (address Address) GetBytes() []byte {
 	addressBytes, _ := hex.DecodeString(string(address))
 	return addressBytes

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/lib/crypto"
@@ -68,8 +67,7 @@ func ValidFile(path string, name string, fragments []*Fragment) error {
 
 func (root *Root) SearchKey(key crypto.Key, used bool) (hash Hash) {
 	keyBytes, _ := hex.DecodeString(string(key))
-	keyString := sha256.Sum256(keyBytes)
-	keyIndex := hex.EncodeToString(keyString[:])
+	keyIndex := crypto.SHA256(keyBytes)
 	fileKey := root.Keys[Hash(keyIndex)]
 	if fileKey != nil {
 		return Hash(keyIndex)
