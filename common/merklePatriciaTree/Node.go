@@ -42,7 +42,7 @@ type NodeFlag struct {
 	Flag      uint32
 }
 
-// Hash Interface: 含有Hash类的接口
+// hash Interface: 含有Hash类的接口
 type HashInterface interface {
 	CalculateHash() []byte
 }

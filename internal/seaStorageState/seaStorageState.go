@@ -1,4 +1,4 @@
-package state
+package seaStorageState
 
 import (
 	"crypto/sha512"
@@ -13,6 +13,10 @@ type SeaStorageState struct {
 	context   *processor.Context
 	userCache map[string][]byte
 	seaCache  map[string][]byte
+}
+
+func NewSeaStorageState(context *processor.Context) *SeaStorageState {
+	return &SeaStorageState{context: context, userCache: make(map[string][]byte), seaCache: make(map[string][]byte)}
 }
 
 func hexdigest(str string) string {

@@ -3,18 +3,22 @@ package storage
 import (
 	"encoding/hex"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/lib/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/crypto"
 	"strings"
 )
 
 type Root struct {
-	Home   *Directory
-	Shared *Directory
-	Keys   map[Hash]*FileKey
+	home   *Directory
+	shared *Directory
+	keys   map[Hash]*FileKey
+}
+
+func NewRoot() *Root {
+	return &Root{home: NewDirectory("home"), shared: NewDirectory("shared"), keys: make(map[Hash]*FileKey)}
 }
 
 // Check the path whether valid.
-// Valid Name shouldn't contain '/'
+// Valid name shouldn't contain '/'
 func ValidPath(path string) error {
 	if !strings.HasPrefix(path, "/") {
 		return errors.New("Path should start with '/': " + path)
@@ -37,10 +41,10 @@ func ValidPath(path string) error {
 // (2) not contain '//'
 func ValidName(name string) error {
 	if len(name) == 0 {
-		return errors.New("Name shouldn't be nil: " + name)
+		return errors.New("name shouldn't be nil: " + name)
 	}
 	if strings.Contains(name, "/") {
-		return errors.New("Name shouldn't contain '/': " + name)
+		return errors.New("name shouldn't contain '/': " + name)
 	}
 	return nil
 }
@@ -58,7 +62,7 @@ func ValidFile(path string, name string, fragments []*Fragment) error {
 		return errors.New("File should contain storage address(es) for store data. ")
 	}
 	for _, fragment := range fragments {
-		if len(fragment.Seas) == 0 {
+		if len(fragment.seas) == 0 {
 			return errors.New("File should contain storage address(es) for store data. ")
 		}
 	}
@@ -68,7 +72,7 @@ func ValidFile(path string, name string, fragments []*Fragment) error {
 func (root *Root) SearchKey(key crypto.Key, used bool) (hash Hash) {
 	keyBytes, _ := hex.DecodeString(string(key))
 	keyIndex := crypto.SHA256(keyBytes)
-	fileKey := root.Keys[Hash(keyIndex)]
+	fileKey := root.keys[Hash(keyIndex)]
 	if fileKey != nil {
 		return Hash(keyIndex)
 	} else if used {
@@ -83,7 +87,7 @@ func (root *Root) UploadFile(path string, name string, size uint, hash Hash, key
 		return err
 	}
 	fileKeyIndex := root.SearchKey(key, true)
-	return root.Home.CreateFile(path, name, size, hash, fileKeyIndex, fragments)
+	return root.home.CreateFile(path, name, size, hash, fileKeyIndex, fragments)
 }
 
 func (root *Root) UpdateFileName(path string, name string, newName string) error {
@@ -99,7 +103,7 @@ func (root *Root) UpdateFileName(path string, name string, newName string) error
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileName(path, name, newName)
+	return root.home.UpdateFileName(path, name, newName)
 }
 
 func (root *Root) UpdateFileData(path string, name string, size uint, hash Hash, fragments []*Fragment) error {
@@ -107,7 +111,7 @@ func (root *Root) UpdateFileData(path string, name string, size uint, hash Hash,
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileData(path, name, size, hash, fragments)
+	return root.home.UpdateFileData(path, name, size, hash, fragments)
 }
 
 func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
@@ -119,9 +123,9 @@ func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, 
 }
 
 func (root *Root) PublicKey(address crypto.Address, keyHash Hash, key crypto.Key) error {
-	target := root.Keys[keyHash]
-	if target.Key.Verify(address, key) {
-		target.Key = key
+	target := root.keys[keyHash]
+	if target.key.Verify(address, key) {
+		target.key = key
 	}
 	return nil
 }
@@ -135,27 +139,27 @@ func (root *Root) DeleteFile(path string, name string) error {
 	if err != nil {
 		return err
 	}
-	err, dir := root.Home.CheckPathExists(path)
+	err, dir := root.home.CheckPathExists(path)
 	if err != nil {
 		return err
 	}
-	for i, iNode := range dir.INodes {
+	for i, iNode := range dir.iNodes {
 		switch iNode.(type) {
 		case *File:
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err, keyIndex := root.Shared.DeleteFile(sharedPath, name)
+					err, keyIndex := root.shared.DeleteFile(sharedPath, name)
 					if err != nil {
 						return err
 					}
-					root.Keys[keyIndex].Used--
-					if root.Keys[keyIndex].Used == 0 {
-						delete(root.Keys, keyIndex)
+					root.keys[keyIndex].used--
+					if root.keys[keyIndex].used == 0 {
+						delete(root.keys, keyIndex)
 					}
 				}
 			}
-			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+			dir.iNodes = append(dir.iNodes[:i], dir.iNodes[i+1:]...)
 			return nil
 		default:
 		}
@@ -168,7 +172,7 @@ func (root *Root) CreateDirectory(path string) error {
 	if err != nil {
 		return err
 	}
-	err, _ = root.Home.CreateDirectory(path)
+	err, _ = root.home.CreateDirectory(path)
 	return err
 }
 
@@ -181,26 +185,26 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 	if err != nil {
 		return err
 	}
-	err, dir := root.Home.CheckPathExists(path)
+	err, dir := root.home.CheckPathExists(path)
 	if err != nil {
 		return err
 	}
-	for i, iNode := range dir.INodes {
+	for i, iNode := range dir.iNodes {
 		switch iNode.(type) {
 		case *Directory:
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err, operations := root.Shared.DeleteDirectory(sharedPath, name)
+					err, operations := root.shared.DeleteDirectory(sharedPath, name)
 					if err != nil {
 						return err
 					}
 					for k, v := range operations {
-						root.Keys[k].Used -= v
+						root.keys[k].used -= v
 					}
 				}
 			}
-			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+			dir.iNodes = append(dir.iNodes[:i], dir.iNodes[i+1:]...)
 			return nil
 		default:
 		}
@@ -221,14 +225,14 @@ func (root *Root) ShareFiles(srcPath string, name string, dstPath string) error 
 	if err != nil {
 		return err
 	}
-	err, dir := root.Shared.CheckPathExists(dstPath)
+	err, dir := root.shared.CheckPathExists(dstPath)
 	if err != nil {
-		err, dir = root.Shared.CreateDirectory(dstPath)
+		err, dir = root.shared.CreateDirectory(dstPath)
 		if err != nil {
 			return err
 		}
 	}
-	err, iNode := root.Home.CheckINodeExists(srcPath, name)
+	err, iNode := root.home.CheckINodeExists(srcPath, name)
 	if err != nil {
 		return err
 	}
@@ -236,6 +240,6 @@ func (root *Root) ShareFiles(srcPath string, name string, dstPath string) error 
 		return errors.New("This File or Directory is already shared. ")
 	}
 	iNode.SetSharedPath(dstPath)
-	dir.INodes = append(dir.INodes, iNode)
+	dir.iNodes = append(dir.iNodes, iNode)
 	return nil
 }

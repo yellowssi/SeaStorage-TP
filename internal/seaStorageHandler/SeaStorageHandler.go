@@ -1,9 +1,9 @@
-package handler
+package seaStorageHandler
 
 import (
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/state"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/seaStorageState"
 )
 
 type SeaStorageHandler struct {
@@ -20,7 +20,7 @@ func (h *SeaStorageHandler) FamilyVersion() []string {
 }
 
 func (h *SeaStorageHandler) FamilyNamespaces() []string {
-	return []string{state.Namespace}
+	return []string{seaStorageState.Namespace}
 }
 
 func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {

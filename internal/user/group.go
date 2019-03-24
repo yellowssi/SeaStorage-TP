@@ -10,43 +10,47 @@ var (
 )
 
 type Group struct {
-	Name    string
-	Leader  Address
-	Members map[Address]Role
+	name    string
+	leader  Address
+	members map[Address]Role
+}
+
+func NewGroup(name string, leader Address) *Group {
+	return &Group{name: name, leader: leader, members: map[Address]Role{leader: RoleOwner}}
 }
 
 func (g *Group) Rename(user Address, name string) bool {
-	if g.Leader != user {
+	if g.leader != user {
 		return false
 	}
-	g.Name = name
+	g.name = name
 	return false
 }
 
 func (g *Group) UpdateLeader(user Address, newLeader Address) bool {
-	if user == g.Leader {
-		g.Leader = newLeader
+	if user == g.leader {
+		g.leader = newLeader
 		return true
 	}
 	return false
 }
 
 func (g *Group) UpdateMemberRole(user Address, member Address, role Role) bool {
-	if g.Members[user] != RoleOwner {
+	if g.members[user] != RoleOwner {
 		return false
-	} else if g.Members[member] == RoleOwner && g.Leader != user {
+	} else if g.members[member] == RoleOwner && g.leader != user {
 		return false
 	}
-	g.Members[member] = role
+	g.members[member] = role
 	return true
 }
 
 func (g *Group) RemoveMember(user Address, member Address) bool {
-	if g.Members[user] != RoleOwner {
+	if g.members[user] != RoleOwner {
 		return false
-	} else if g.Members[member] == RoleOwner && g.Leader != user {
+	} else if g.members[member] == RoleOwner && g.leader != user {
 		return false
 	}
-	delete(g.Members, member)
+	delete(g.members, member)
 	return true
 }

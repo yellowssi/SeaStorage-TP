@@ -30,7 +30,7 @@ func (mpt *MPT) GenerateRoot(value HashInterface) bool {
 }
 
 /**
- * Get Value By Key (Hash)
+ * Get Value By key (hash)
  */
 func (mpt *MPT) Get(key []byte) HashInterface {
 	if mpt.RootNode == nil {
@@ -280,7 +280,7 @@ func InsertNode(nodeInterface NodeInterface, key dataStructure.BitArray, value H
 }
 
 /**
- * Remove Value By Key (Hash)
+ * Remove Value By key (hash)
  */
 func (mpt *MPT) Remove(key []byte) bool {
 	if mpt.RootNode == nil {
@@ -352,14 +352,14 @@ func RemoveNode(nodeInterface NodeInterface, key *dataStructure.BitArray) bool {
 }
 
 /**
- * Recursive Hash Update From Root Node
+ * Recursive hash Update From Root Node
  */
 func (mpt *MPT) RootRecursiveHashUpdate() {
 	RecursiveHashUpdate(mpt.RootNode)
 }
 
 /**
- * Recursive Hash Update
+ * Recursive hash Update
  */
 func RecursiveHashUpdate(nodeInterface NodeInterface) {
 	switch nodeInterface.(type) {

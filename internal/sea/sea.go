@@ -3,13 +3,13 @@ package sea
 import "time"
 
 type Sea struct {
-	TotalSpace uint
-	FreeSpace  uint
+	totalSpace uint
+	freeSpace  uint
 }
 
 type Fragment struct {
-	Timestamp time.Time
-	Data []byte
+	timestamp time.Time
+	data      []byte
 }
 
 type Block struct {
