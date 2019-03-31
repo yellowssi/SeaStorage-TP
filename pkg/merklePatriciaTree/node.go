@@ -3,11 +3,10 @@ package merklePatriciaTree
 import (
 	"bytes"
 	"crypto/sha256"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/common/dataStructure"
 	"time"
 )
 
-var NIBBLES = []dataStructure.BitArray{
+var NIBBLES = []BitArray{
 	{Value: []bool{false, false, false, false}},
 	{Value: []bool{false, false, false, true}},
 	{Value: []bool{false, false, true, false}},
@@ -30,10 +29,10 @@ var NibblesLen = NIBBLES[0].GetLength()
 var NibblesNum = len(NIBBLES)
 
 var (
-	EvenExtensionNode = dataStructure.BitArray{Value: []bool{false, false, false, false}}
-	OddExtensionNode  = dataStructure.BitArray{Value: []bool{false, false, false, true}}
-	EvenLeafNode      = dataStructure.BitArray{Value: []bool{false, false, true, false}}
-	OddLeafNode       = dataStructure.BitArray{Value: []bool{false, false, true, true}}
+	EvenExtensionNode = BitArray{Value: []bool{false, false, false, false}}
+	OddExtensionNode  = BitArray{Value: []bool{false, false, false, true}}
+	EvenLeafNode      = BitArray{Value: []bool{false, false, true, false}}
+	OddLeafNode       = BitArray{Value: []bool{false, false, true, true}}
 )
 
 type NodeFlag struct {
@@ -57,13 +56,13 @@ type NodeInterface interface {
 
 // Node: 树节点（Leaf Node & Extension Node）
 type Node struct {
-	Prefix   dataStructure.BitArray
-	Key      dataStructure.BitArray
+	Prefix   BitArray
+	Key      BitArray
 	Value    HashInterface
 	NodeFlag *NodeFlag
 }
 
-func NewNode(prefix dataStructure.BitArray, key dataStructure.BitArray, value HashInterface) *Node {
+func NewNode(prefix BitArray, key BitArray, value HashInterface) *Node {
 	node := &Node{Prefix: prefix, Key: key, Value: value}
 	node.GenerateNodeFlag()
 	node.NodeFlag.Flag++

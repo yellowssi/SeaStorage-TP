@@ -3,7 +3,7 @@ package seaStorageHandler
 import (
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/seaStorageState"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStorageState"
 )
 
 type SeaStorageHandler struct {

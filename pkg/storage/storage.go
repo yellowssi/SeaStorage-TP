@@ -3,7 +3,7 @@ package storage
 import (
 	"encoding/hex"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/internal/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"strings"
 )
 
@@ -19,7 +19,7 @@ func NewRoot() *Root {
 
 // Check the path whether valid.
 // Valid name shouldn't contain '/'
-func ValidPath(path string) error {
+func validPath(path string) error {
 	if !strings.HasPrefix(path, "/") {
 		return errors.New("Path should start with '/': " + path)
 	}
@@ -39,7 +39,7 @@ func ValidPath(path string) error {
 // Valid Path
 // (1) start and end with '/'
 // (2) not contain '//'
-func ValidName(name string) error {
+func validName(name string) error {
 	if len(name) == 0 {
 		return errors.New("name shouldn't be nil: " + name)
 	}
@@ -49,12 +49,12 @@ func ValidName(name string) error {
 	return nil
 }
 
-func ValidFile(path string, name string, fragments []*Fragment) error {
-	err := ValidPath(path)
+func validFile(path string, name string, fragments []*Fragment) error {
+	err := validPath(path)
 	if err != nil {
 		return err
 	}
-	err = ValidName(name)
+	err = validName(name)
 	if err != nil {
 		return err
 	}
@@ -71,9 +71,9 @@ func ValidFile(path string, name string, fragments []*Fragment) error {
 
 func (root *Root) SearchKey(key crypto.Key, used bool) (hash Hash) {
 	keyBytes, _ := hex.DecodeString(string(key))
-	keyIndex := crypto.SHA256(keyBytes)
-	fileKey := root.keys[Hash(keyIndex)]
-	if fileKey != nil {
+	keyIndex := crypto.SHA512(keyBytes)
+	_, ok := root.keys[Hash(keyIndex)]
+	if ok {
 		return Hash(keyIndex)
 	} else if used {
 		return Hash(keyIndex)
@@ -82,7 +82,7 @@ func (root *Root) SearchKey(key crypto.Key, used bool) (hash Hash) {
 }
 
 func (root *Root) UploadFile(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
-	err := ValidFile(path, name, fragments)
+	err := validFile(path, name, fragments)
 	if err != nil {
 		return err
 	}
@@ -91,15 +91,15 @@ func (root *Root) UploadFile(path string, name string, size uint, hash Hash, key
 }
 
 func (root *Root) UpdateFileName(path string, name string, newName string) error {
-	err := ValidPath(path)
+	err := validPath(path)
 	if err != nil {
 		return err
 	}
-	err = ValidName(name)
+	err = validName(name)
 	if err != nil {
 		return err
 	}
-	err = ValidName(newName)
+	err = validName(newName)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (root *Root) UpdateFileName(path string, name string, newName string) error
 }
 
 func (root *Root) UpdateFileData(path string, name string, size uint, hash Hash, fragments []*Fragment) error {
-	err := ValidFile(path, name, fragments)
+	err := validFile(path, name, fragments)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (root *Root) UpdateFileData(path string, name string, size uint, hash Hash,
 }
 
 func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, key crypto.Key, fragments []*Fragment) error {
-	err := ValidFile(path, name, fragments)
+	err := validFile(path, name, fragments)
 	if err != nil {
 		return err
 	}
@@ -123,23 +123,26 @@ func (root *Root) UpdateFileKey(path string, name string, size uint, hash Hash, 
 }
 
 func (root *Root) PublicKey(address crypto.Address, keyHash Hash, key crypto.Key) error {
-	target := root.keys[keyHash]
-	if target.key.Verify(address, key) {
-		target.key = key
+	target, ok := root.keys[keyHash]
+	if ok {
+		if target.key.Verify(address, key) {
+			target.key = key
+			return nil
+		}
 	}
-	return nil
+	return errors.New("Key error or not exists. ")
 }
 
 func (root *Root) DeleteFile(path string, name string) error {
-	err := ValidPath(path)
+	err := validPath(path)
 	if err != nil {
 		return err
 	}
-	err = ValidName(name)
+	err = validName(name)
 	if err != nil {
 		return err
 	}
-	err, dir := root.home.CheckPathExists(path)
+	dir, err := root.home.checkPathExists(path)
 	if err != nil {
 		return err
 	}
@@ -149,7 +152,7 @@ func (root *Root) DeleteFile(path string, name string) error {
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err, keyIndex := root.shared.DeleteFile(sharedPath, name)
+					keyIndex, err := root.shared.DeleteFile(sharedPath, name)
 					if err != nil {
 						return err
 					}
@@ -168,24 +171,24 @@ func (root *Root) DeleteFile(path string, name string) error {
 }
 
 func (root *Root) CreateDirectory(path string) error {
-	err := ValidPath(path)
+	err := validPath(path)
 	if err != nil {
 		return err
 	}
-	err, _ = root.home.CreateDirectory(path)
+	_, err = root.home.CreateDirectory(path)
 	return err
 }
 
 func (root *Root) DeleteDirectory(path string, name string) error {
-	err := ValidPath(path)
+	err := validPath(path)
 	if err != nil {
 		return err
 	}
-	err = ValidName(name)
+	err = validName(name)
 	if err != nil {
 		return err
 	}
-	err, dir := root.home.CheckPathExists(path)
+	dir, err := root.home.checkPathExists(path)
 	if err != nil {
 		return err
 	}
@@ -195,7 +198,7 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 			if iNode.GetName() == name {
 				sharedPath := iNode.GetSharedPath()
 				if sharedPath != "" {
-					err, operations := root.shared.DeleteDirectory(sharedPath, name)
+					operations, err := root.shared.DeleteDirectory(sharedPath, name)
 					if err != nil {
 						return err
 					}
@@ -213,26 +216,26 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 }
 
 func (root *Root) ShareFiles(srcPath string, name string, dstPath string) error {
-	err := ValidPath(srcPath)
+	err := validPath(srcPath)
 	if err != nil {
 		return err
 	}
-	err = ValidName(name)
+	err = validName(name)
 	if err != nil {
 		return err
 	}
-	err = ValidPath(dstPath)
+	err = validPath(dstPath)
 	if err != nil {
 		return err
 	}
-	err, dir := root.shared.CheckPathExists(dstPath)
+	dir, err := root.shared.checkPathExists(dstPath)
 	if err != nil {
-		err, dir = root.shared.CreateDirectory(dstPath)
+		dir, err = root.shared.CreateDirectory(dstPath)
 		if err != nil {
 			return err
 		}
 	}
-	err, iNode := root.home.CheckINodeExists(srcPath, name)
+	iNode, err := root.home.checkINodeExists(srcPath, name)
 	if err != nil {
 		return err
 	}

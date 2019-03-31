@@ -1,4 +1,4 @@
-package payload
+package seaStoragePayload
 
 type SeaStoragePayload struct {
 	Name   string

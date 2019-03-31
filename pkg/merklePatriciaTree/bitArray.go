@@ -1,4 +1,4 @@
-package dataStructure
+package merklePatriciaTree
 
 import (
 	"bytes"
