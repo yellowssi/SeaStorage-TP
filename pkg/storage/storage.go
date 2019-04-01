@@ -235,6 +235,7 @@ func (root *Root) CancelShare(name string) error {
 	}
 	for i, iNode := range root.shared.iNodes {
 		if iNode.GetName() == name {
+			iNode.SetShared(false)
 			root.shared.iNodes = append(root.shared.iNodes[:i], root.shared.iNodes[i+1:]...)
 			return nil
 		}
