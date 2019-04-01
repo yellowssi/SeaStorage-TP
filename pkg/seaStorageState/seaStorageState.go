@@ -11,35 +11,44 @@ import (
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/user"
 )
 
-var Namespace = crypto.SHA512([]byte("SeaStorage"))[:6]
+type AddressType uint8
+
+var (
+	AddressTypeUser  AddressType = 0
+	AddressTypeGroup AddressType = 1
+	AddressTypeSea   AddressType = 2
+)
+
+var (
+	Namespace      = crypto.SHA512([]byte("SeaStorage"))[:6]
+	UserNamespace  = crypto.SHA512([]byte("user"))[:16]
+	GroupNamespace = crypto.SHA512([]byte("group"))[:16]
+	SeaNamespace   = crypto.SHA512([]byte("sea"))[:16]
+)
 
 type SeaStorageState struct {
-	userContext  *processor.Context
-	groupContext *processor.Context
-	seaContext   *processor.Context
-	userCache    map[crypto.Address][]byte
-	groupCache   map[crypto.Address][]byte
-	seaCache     map[crypto.Address][]byte
+	context    *processor.Context
+	userCache  map[crypto.Address][]byte
+	groupCache map[crypto.Address][]byte
+	seaCache   map[crypto.Address][]byte
 }
 
-func NewSeaStorageState(userContext *processor.Context, groupContext *processor.Context, seaContext *processor.Context) *SeaStorageState {
+func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	return &SeaStorageState{
-		userContext:  userContext,
-		groupContext: groupContext,
-		seaContext:   seaContext,
-		userCache:    make(map[crypto.Address][]byte),
-		groupCache:   make(map[crypto.Address][]byte),
-		seaCache:     make(map[crypto.Address][]byte),
+		context:    context,
+		userCache:  make(map[crypto.Address][]byte),
+		groupCache: make(map[crypto.Address][]byte),
+		seaCache:   make(map[crypto.Address][]byte),
 	}
 }
 
 func (sss *SeaStorageState) GetUser(name string, publicKey string) (*user.User, error) {
-	address := makeAddress(name, publicKey)
+	address := MakeAddress(AddressTypeUser, name, publicKey)
 	userBytes, ok := sss.userCache[address]
 	if ok {
 		return deserializeUser(userBytes)
 	}
-	results, err := sss.userContext.GetState([]string{string(address)})
+	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +60,12 @@ func (sss *SeaStorageState) GetUser(name string, publicKey string) (*user.User, 
 }
 
 func (sss *SeaStorageState) CreateUser(name string, publicKey string) error {
-	address := makeAddress(name, publicKey)
+	address := MakeAddress(AddressTypeUser, name, publicKey)
 	_, ok := sss.userCache[address]
 	if ok {
 		return errors.New("User exists. ")
 	}
-	results, err := sss.userContext.GetState([]string{string(address)})
+	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return err
 	}
@@ -71,8 +80,7 @@ func (sss *SeaStorageState) saveUser(u *user.User, address crypto.Address) error
 	if err != nil {
 		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize account: ", err)}
 	}
-	sss.userCache[address] = uBytes
-	addresses, err := sss.userContext.SetState(map[string][]byte{
+	addresses, err := sss.context.SetState(map[string][]byte{
 		string(address): uBytes,
 	})
 	if err != nil {
@@ -81,15 +89,17 @@ func (sss *SeaStorageState) saveUser(u *user.User, address crypto.Address) error
 	if len(addresses) == 0 {
 		return &processor.InternalError{Msg: "No addresses in set response"}
 	}
+	sss.userCache[address] = uBytes
+	return nil
 }
 
-func (sss *SeaStorageState) GetGroup(name string, publicKey string) (*user.Group, error) {
-	address := makeAddress(name, publicKey)
+func (sss *SeaStorageState) GetGroup(name string) (*user.Group, error) {
+	address := MakeAddress(AddressTypeGroup, name, "")
 	groupBytes, ok := sss.groupCache[address]
 	if ok {
 		return deserializeGroup(groupBytes)
 	}
-	results, err := sss.groupContext.GetState([]string{string(address)})
+	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return nil, err
 	}
@@ -100,13 +110,47 @@ func (sss *SeaStorageState) GetGroup(name string, publicKey string) (*user.Group
 	return nil, errors.New("Group doesn't exists. ")
 }
 
+func (sss *SeaStorageState) CreateGroup(name string, leader crypto.Address) error {
+	address := MakeAddress(AddressTypeGroup, name, "")
+	_, ok := sss.groupCache[address]
+	if ok {
+		return errors.New("Group exists. ")
+	}
+	results, err := sss.context.GetState([]string{string(address)})
+	if err != nil {
+		return err
+	}
+	if len(results[string(address)]) > 0 {
+		return errors.New("Group exists. ")
+	}
+	return sss.saveGroup(user.NewGroup(name, leader), address)
+}
+
+func (sss *SeaStorageState) saveGroup(g *user.Group, address crypto.Address) error {
+	gBytes, err := serialize(g)
+	if err != nil {
+		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize group: ", err)}
+	}
+	addresses, err := sss.context.SetState(map[string][]byte{
+		string(address): gBytes,
+	})
+	if err != nil {
+		return err
+	}
+	if len(addresses) > 0 {
+		return &processor.InternalError{Msg: "No addresses in set response"}
+	}
+	sss.groupCache[address] = gBytes
+	return nil
+}
+
 func (sss *SeaStorageState) GetSea(name string, publicKey string) (*sea.Sea, error) {
-	address := makeAddress(name, publicKey)
+	address := MakeAddress(AddressTypeSea, name, publicKey)
 	seaBytes, ok := sss.seaCache[address]
 	if ok {
 		return deserializeSea(seaBytes)
 	}
-	results, err := sss.seaContext.GetState([]string{string(address)})
+	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +159,40 @@ func (sss *SeaStorageState) GetSea(name string, publicKey string) (*sea.Sea, err
 		return deserializeSea(results[string(address)])
 	}
 	return nil, errors.New("Sea doesn't exists. ")
+}
+
+func (sss *SeaStorageState) CreateSea(name string, publicKey string) error {
+	address := MakeAddress(AddressTypeSea, name, publicKey)
+	_, ok := sss.seaCache[address]
+	if ok {
+		return errors.New("Sea exists. ")
+	}
+	results, err := sss.context.GetState([]string{string(address)})
+	if err != nil {
+		return err
+	}
+	if len(string(results[string(address)])) > 0 {
+		return errors.New("Sea exists. ")
+	}
+	return sss.saveSea(sea.NewSea(name), address)
+}
+
+func (sss *SeaStorageState) saveSea(s *sea.Sea, address crypto.Address) error {
+	sBytes, err := serialize(s)
+	if err != nil {
+		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize sea: ", err)}
+	}
+	addresses, err := sss.context.SetState(map[string][]byte{
+		string(address): sBytes,
+	})
+	if err != nil {
+		return err
+	}
+	if len(addresses) == 0 {
+		return &processor.InternalError{Msg: "No addresses in set response. "}
+	}
+	sss.seaCache[address] = sBytes
+	return nil
 }
 
 func serialize(i interface{}) (data []byte, err error) {
@@ -145,6 +223,14 @@ func deserializeSea(data []byte) (sea *sea.Sea, err error) {
 	return sea, err
 }
 
-func makeAddress(name string, publicKey string) crypto.Address {
-	return crypto.Address(Namespace + crypto.SHA512(bytes.Join([][]byte{[]byte(name), []byte(publicKey)}, []byte{}))[:64])
+func MakeAddress(addressType AddressType, name string, publicKey string) crypto.Address {
+	switch addressType {
+	case AddressTypeUser:
+		return crypto.Address(Namespace + UserNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), []byte(publicKey)}, []byte{})))
+	case AddressTypeGroup:
+		return crypto.Address(Namespace + GroupNamespace + crypto.SHA384([]byte(name)))
+	case AddressTypeSea:
+		return crypto.Address(Namespace + SeaNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), []byte(publicKey)}, []byte{})))
+	}
+	return crypto.Address("")
 }
