@@ -21,6 +21,13 @@ func SHA256(data []byte) Hash {
 	return HashFromBytes(hashBytes)
 }
 
+func SHA384(data []byte) Hash {
+	hashHandler := sha512.New384()
+	hashHandler.Write(data)
+	hashBytes := hashHandler.Sum(nil)
+	return HashFromBytes(hashBytes)
+}
+
 func SHA512(data []byte) Hash {
 	hashHandler := sha512.New()
 	hashHandler.Write(data)
