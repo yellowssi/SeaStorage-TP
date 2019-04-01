@@ -1,8 +1,9 @@
 package user
 
-import "github.com/deckarep/golang-set"
-
-type Address string
+import (
+	"github.com/deckarep/golang-set"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+)
 
 type User struct {
 	Name   string
@@ -14,7 +15,7 @@ func NewUser(name string) *User {
 	return &User{Name: name, Groups: groups}
 }
 
-func (u *User) JoinGroup(group Address) bool {
+func (u *User) JoinGroup(group crypto.Address) bool {
 	if u.Groups.Contains(group) {
 		return false
 	} else {
@@ -23,7 +24,7 @@ func (u *User) JoinGroup(group Address) bool {
 	}
 }
 
-func (u *User) LeaveGroup(group Address) bool {
+func (u *User) LeaveGroup(group crypto.Address) bool {
 	if u.Groups.Contains(group) {
 		u.Groups.Remove(group)
 		return true
@@ -31,7 +32,7 @@ func (u *User) LeaveGroup(group Address) bool {
 	return false
 }
 
-func (u *User) IsInGroup(group Address) bool {
+func (u *User) IsInGroup(group crypto.Address) bool {
 	return u.Groups.Contains(group)
 }
 
