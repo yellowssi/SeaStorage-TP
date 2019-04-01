@@ -23,29 +23,25 @@ var (
 var (
 	PayloadTypeUserCreateFile          PayloadType = 100
 	PayloadTypeUserCreateDirectory     PayloadType = 101
-	PayloadTypeUserUploadFile          PayloadType = 102
-	PayloadTypeUserUploadDirectory     PayloadType = 103
-	PayloadTypeUserUpdateFile          PayloadType = 104
-	PayloadTypeUserShareFiles          PayloadType = 105
-	PayloadTypeUserPublicKey           PayloadType = 106
-	PayloadTypeUserListDirectory       PayloadType = 107
-	PayloadTypeUserGetFileInfo         PayloadType = 108
-	PayloadTypeUserListSharedDirectory PayloadType = 109
-	PayloadTypeUserGetSharedFileInfo   PayloadType = 110
+	PayloadTypeUserUpdateFile          PayloadType = 102
+	PayloadTypeUserShareFiles          PayloadType = 103
+	PayloadTypeUserPublicKey           PayloadType = 104
+	PayloadTypeUserListDirectory       PayloadType = 105
+	PayloadTypeUserGetFileInfo         PayloadType = 106
+	PayloadTypeUserListSharedDirectory PayloadType = 107
+	PayloadTypeUserGetSharedFileInfo   PayloadType = 108
 )
 
 var (
 	PayloadTypeGroupCreateFile          PayloadType = 200
 	PayloadTypeGroupCreateDirectory     PayloadType = 201
-	PayloadTypeGroupUploadFile          PayloadType = 202
-	PayloadTypeGroupUploadDirectory     PayloadType = 203
-	PayloadTypeGroupUpdateFile          PayloadType = 204
-	PayloadTypeGroupShareFiles          PayloadType = 205
-	PayloadTypeGroupPublicKey           PayloadType = 206
-	PayloadTypeGroupListDirectory       PayloadType = 207
-	PayloadTypeGroupGetFileInfo         PayloadType = 208
-	PayloadTypeGroupListSharedDirectory PayloadType = 209
-	PayloadTypeGroupGetSharedFileInfo   PayloadType = 210
+	PayloadTypeGroupUpdateFile          PayloadType = 202
+	PayloadTypeGroupShareFiles          PayloadType = 203
+	PayloadTypeGroupPublicKey           PayloadType = 204
+	PayloadTypeGroupListDirectory       PayloadType = 205
+	PayloadTypeGroupGetFileInfo         PayloadType = 206
+	PayloadTypeGroupListSharedDirectory PayloadType = 207
+	PayloadTypeGroupGetSharedFileInfo   PayloadType = 208
 )
 
 var (

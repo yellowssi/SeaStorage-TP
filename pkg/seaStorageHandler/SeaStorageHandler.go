@@ -45,9 +45,17 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	// User Action
 	case seaStoragePayload.PayloadTypeUserCreateDirectory:
+		u, err := state.GetUser(payload.Name, user)
+		if err != nil {
+			return err
+		}
+		return u.Root.CreateDirectory(payload.PWD + "/" + payload.Create)
 	case seaStoragePayload.PayloadTypeUserCreateFile:
-	case seaStoragePayload.PayloadTypeUserUploadFile:
-	case seaStoragePayload.PayloadTypeUserUploadDirectory:
+		u, err := state.GetUser(payload.Name, user)
+		if err != nil {
+			return err
+		}
+		return u.Root.CreateFile(payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserUpdateFile:
 	case seaStoragePayload.PayloadTypeUserShareFiles:
 	case seaStoragePayload.PayloadTypeUserPublicKey:
@@ -60,8 +68,6 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	// Group Action
 	case seaStoragePayload.PayloadTypeGroupCreateDirectory:
 	case seaStoragePayload.PayloadTypeGroupCreateFile:
-	case seaStoragePayload.PayloadTypeGroupUploadFile:
-	case seaStoragePayload.PayloadTypeGroupUploadDirectory:
 	case seaStoragePayload.PayloadTypeGroupUpdateFile:
 	case seaStoragePayload.PayloadTypeGroupShareFiles:
 	case seaStoragePayload.PayloadTypeGroupPublicKey:
@@ -69,7 +75,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case seaStoragePayload.PayloadTypeGroupGetFileInfo:
 	case seaStoragePayload.PayloadTypeGroupListSharedDirectory:
 	case seaStoragePayload.PayloadTypeGroupGetSharedFileInfo:
-	// TODO: Access User Join Group && Leave Member
+	// TODO: Invite User & Access User Join Group & Leave Member
 
 	// Sea Action
 	case seaStoragePayload.PayloadTypeSeaCheckStatus:

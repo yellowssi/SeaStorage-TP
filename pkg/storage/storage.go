@@ -91,13 +91,13 @@ func (root *Root) SearchKey(key crypto.Key, used bool) (hash crypto.Hash) {
 	return hash
 }
 
-func (root *Root) UploadFile(path string, name string, size uint, hash crypto.Hash, key crypto.Key, fragments []*Fragment) error {
-	err := validInfo(path, name)
+func (root *Root) CreateFile(path string, info FileInfo) error {
+	err := validInfo(path, info.Name)
 	if err != nil {
 		return err
 	}
-	fileKeyIndex := root.SearchKey(key, true)
-	return root.home.CreateFile(path, name, size, hash, fileKeyIndex, fragments)
+	fileKeyIndex := root.SearchKey(info.Key, true)
+	return root.home.CreateFile(path, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
 }
 
 func (root *Root) UpdateFileName(path string, name string, newName string) error {

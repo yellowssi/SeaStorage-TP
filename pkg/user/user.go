@@ -3,16 +3,18 @@ package user
 import (
 	"github.com/deckarep/golang-set"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
 )
 
 type User struct {
 	Name   string
 	Groups mapset.Set
+	Root   *storage.Root
 }
 
 func NewUser(name string) *User {
 	var groups mapset.Set
-	return &User{Name: name, Groups: groups}
+	return &User{Name: name, Groups: groups, Root: storage.NewRoot()}
 }
 
 func (u *User) JoinGroup(group crypto.Address) bool {
