@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
@@ -15,12 +13,6 @@ type Root struct {
 	Keys   map[crypto.Hash]*FileKey
 }
 
-type EncryptedRoot struct {
-	Home   []byte
-	Shared *Directory
-	Keys   map[crypto.Hash]*FileKey
-}
-
 type FileInfo struct {
 	Name      string
 	Size      uint
@@ -29,16 +21,8 @@ type FileInfo struct {
 	Fragments []*Fragment
 }
 
-func NewRoot() *Root {
+func NewRoot(home *Directory, shared *Directory, keys map[crypto.Hash]*FileKey) *Root {
 	return &Root{
-		Home:   NewDirectory("Home"),
-		Shared: NewDirectory("Shared"),
-		Keys:   make(map[crypto.Hash]*FileKey),
-	}
-}
-
-func NewRootEncrypted(home []byte, shared *Directory, keys map[crypto.Hash]*FileKey) *EncryptedRoot {
-	return &EncryptedRoot{
 		Home:   home,
 		Shared: shared,
 		Keys:   keys,
@@ -53,6 +37,10 @@ func NewFileInfo(name string, size uint, hash crypto.Hash, key crypto.Key, fragm
 		Key:       key,
 		Fragments: fragments,
 	}
+}
+
+func GenerateRoot() *Root {
+	return NewRoot(NewDirectory("home"), NewDirectory("shared"), make(map[crypto.Hash]*FileKey))
 }
 
 // Check the path whether valid.
@@ -303,25 +291,4 @@ func (root *Root) GetSharedFile(path string, name string) (file FileInfo, err er
 	}
 	key := root.Keys[f.KeyIndex]
 	return *NewFileInfo(f.Name, f.Size, f.Hash, key.Key, f.Fragments), nil
-}
-
-func (root *Root) ToBytes(publicKey crypto.Address) ([]byte, error) {
-	// Register iNode interface
-	gob.Register(&File{})
-	gob.Register(&Directory{})
-
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-
-	err := enc.Encode(root.Home)
-	if err != nil {
-		return nil, err
-	}
-	encryptedHome := publicKey.Encryption(buf.Bytes())
-	rootEnc := NewRootEncrypted(encryptedHome, root.Shared, root.Keys)
-	err = enc.Encode(rootEnc)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
 }

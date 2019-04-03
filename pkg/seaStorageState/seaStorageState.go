@@ -72,7 +72,7 @@ func (sss *SeaStorageState) CreateUser(name string, publicKey crypto.Address) er
 	if len(string(results[string(address)])) > 0 {
 		return errors.New("User exists. ")
 	}
-	return sss.saveUser(user.NewUser(name), address)
+	return sss.saveUser(user.GenerateUser(name), address)
 }
 
 func (sss *SeaStorageState) saveUser(u *user.User, address crypto.Address) error {
@@ -110,7 +110,7 @@ func (sss *SeaStorageState) GetGroup(name string) (*user.Group, error) {
 	return nil, errors.New("Group doesn't exists. ")
 }
 
-func (sss *SeaStorageState) CreateGroup(name string, leader crypto.Address) error {
+func (sss *SeaStorageState) CreateGroup(name string, leader crypto.Address, key crypto.Key) error {
 	address := MakeAddress(AddressTypeGroup, name, "")
 	_, ok := sss.groupCache[address]
 	if ok {
@@ -123,7 +123,7 @@ func (sss *SeaStorageState) CreateGroup(name string, leader crypto.Address) erro
 	if len(results[string(address)]) > 0 {
 		return errors.New("Group exists. ")
 	}
-	return sss.saveGroup(user.NewGroup(name, leader), address)
+	return sss.saveGroup(user.GenerateGroup(name, leader), address)
 }
 
 func (sss *SeaStorageState) saveGroup(g *user.Group, address crypto.Address) error {

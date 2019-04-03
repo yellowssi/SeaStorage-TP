@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
 )
 
@@ -57,7 +58,18 @@ type SeaStoragePayload struct {
 	Name     string // default: ""
 	PWD      string // default: "/"
 	Create   string // default: ""
+	Key      crypto.Key
 	FileInfo storage.FileInfo
+}
+
+func NewSeaStoragePayload(action PayloadType, name string, pwd string, create string, info storage.FileInfo) *SeaStoragePayload {
+	return &SeaStoragePayload{
+		Action:   action,
+		Name:     name,
+		PWD:      pwd,
+		Create:   create,
+		FileInfo: info,
+	}
 }
 
 func FromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {

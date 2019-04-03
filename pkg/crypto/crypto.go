@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"bytes"
+	"crypto/aes"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
@@ -44,25 +45,25 @@ func (address Address) ToBytes() []byte {
 	return addressBytes
 }
 
-func (address Address) Encryption(data []byte) []byte {
+func (address Address) Encryption(data []byte) ([]byte, error) {
 	pub, err := ellcurv.ParsePubKey(address.ToBytes(), ellcurv.S256())
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	result, err := ellcurv.Encrypt(pub, data)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return result
+	return result, nil
 }
 
-func Decryption(privateKey []byte, data []byte) []byte {
+func Decryption(privateKey []byte, data []byte) ([]byte, error) {
 	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), privateKey)
 	result, err := ellcurv.Decrypt(priv, data)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return result
+	return result, nil
 }
 
 func GenerateRandomKey(len int) []byte {
@@ -113,6 +114,24 @@ func (k Key) Verify(address Address, key Key) bool {
 		panic(err.Error())
 	}
 	return bytes.Equal(result, k.ToBytes())
+}
+
+func (k Key) Encryption(data []byte) (result []byte, err error) {
+	cipher, err := aes.NewCipher(k.ToBytes())
+	if err != nil {
+		return nil, err
+	}
+	cipher.Encrypt(result, data)
+	return
+}
+
+func (k Key) Decryption(data []byte) (result []byte, err error) {
+	cipher, err := aes.NewCipher(k.ToBytes())
+	if err != nil {
+		return nil, err
+	}
+	cipher.Decrypt(result, data)
+	return
 }
 
 func HashFromBytes(hashBytes []byte) Hash {

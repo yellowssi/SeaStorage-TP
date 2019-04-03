@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"strings"
@@ -375,4 +377,21 @@ func (d *Directory) List(path string) ([]INodeInfo, error) {
 		return nil, err
 	}
 	return generateINodeInfos(dir.INodes), nil
+}
+
+func (d *Directory) ToBytes() ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(d)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func FromBytes(data []byte) (d *Directory, err error) {
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err = dec.Decode(d)
+	return
 }

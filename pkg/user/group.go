@@ -21,12 +21,17 @@ type Group struct {
 	Root    *storage.Root
 }
 
-func NewGroup(name string, leader crypto.Address) *Group {
+func NewGroup(name string, leader crypto.Address, members map[crypto.Address]Role, root *storage.Root) *Group {
 	return &Group{
 		Name:    name,
 		Leader:  leader,
-		Members: map[crypto.Address]Role{leader: RoleOwner},
-		Root:    storage.NewRoot()}
+		Members: members,
+		Root:    root,
+	}
+}
+
+func GenerateGroup(name string, leader crypto.Address) *Group {
+	return NewGroup(name, leader, map[crypto.Address]Role{leader: RoleOwner}, storage.GenerateRoot())
 }
 
 func (g *Group) Rename(user crypto.Address, name string) bool {

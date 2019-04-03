@@ -39,7 +39,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case seaStoragePayload.PayloadTypeCreateUser:
 		return state.CreateUser(payload.Create, user)
 	case seaStoragePayload.PayloadTypeCreateGroup:
-		return state.CreateGroup(payload.Create, seaStorageState.MakeAddress(seaStorageState.AddressTypeUser, payload.Name, user))
+		return state.CreateGroup(payload.Create, seaStorageState.MakeAddress(seaStorageState.AddressTypeUser, payload.Name, user), payload.Key)
 	case seaStoragePayload.PayloadTypeCreateSea:
 		return state.CreateSea(payload.Create, user)
 	case seaStoragePayload.PayloadTypeSearchSharedFile:
