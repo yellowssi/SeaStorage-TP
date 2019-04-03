@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStoragePayload"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStorageState"
 )
@@ -27,7 +28,7 @@ func (h *SeaStorageHandler) FamilyNamespaces() []string {
 
 func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
 	header := request.GetHeader()
-	user := header.GetSignerPublicKey()
+	user := crypto.Address(header.GetSignerPublicKey())
 	payload, err := seaStoragePayload.FromBytes(request.GetPayload())
 	if err != nil {
 		return err

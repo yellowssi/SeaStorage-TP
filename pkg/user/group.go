@@ -1,6 +1,9 @@
 package user
 
-import "gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+import (
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
+)
 
 type Role uint8
 
@@ -12,47 +15,52 @@ var (
 )
 
 type Group struct {
-	name    string
-	leader  crypto.Address
-	members map[crypto.Address]Role
+	Name    string
+	Leader  crypto.Address
+	Members map[crypto.Address]Role
+	Root    *storage.Root
 }
 
 func NewGroup(name string, leader crypto.Address) *Group {
-	return &Group{name: name, leader: leader, members: map[crypto.Address]Role{leader: RoleOwner}}
+	return &Group{
+		Name:    name,
+		Leader:  leader,
+		Members: map[crypto.Address]Role{leader: RoleOwner},
+		Root:    storage.NewRoot()}
 }
 
 func (g *Group) Rename(user crypto.Address, name string) bool {
-	if g.leader != user {
+	if g.Leader != user {
 		return false
 	}
-	g.name = name
+	g.Name = name
 	return false
 }
 
 func (g *Group) UpdateLeader(user crypto.Address, newLeader crypto.Address) bool {
-	if user == g.leader {
-		g.leader = newLeader
+	if user == g.Leader {
+		g.Leader = newLeader
 		return true
 	}
 	return false
 }
 
 func (g *Group) UpdateMemberRole(user crypto.Address, member crypto.Address, role Role) bool {
-	if g.members[user] != RoleOwner {
+	if g.Members[user] != RoleOwner {
 		return false
-	} else if g.members[member] == RoleOwner && g.leader != user {
+	} else if g.Members[member] == RoleOwner && g.Leader != user {
 		return false
 	}
-	g.members[member] = role
+	g.Members[member] = role
 	return true
 }
 
 func (g *Group) RemoveMember(user crypto.Address, member crypto.Address) bool {
-	if g.members[user] != RoleOwner {
+	if g.Members[user] != RoleOwner {
 		return false
-	} else if g.members[member] == RoleOwner && g.leader != user {
+	} else if g.Members[member] == RoleOwner && g.Leader != user {
 		return false
 	}
-	delete(g.members, member)
+	delete(g.Members, member)
 	return true
 }

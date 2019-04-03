@@ -42,7 +42,7 @@ func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	}
 }
 
-func (sss *SeaStorageState) GetUser(name string, publicKey string) (*user.User, error) {
+func (sss *SeaStorageState) GetUser(name string, publicKey crypto.Address) (*user.User, error) {
 	address := MakeAddress(AddressTypeUser, name, publicKey)
 	userBytes, ok := sss.userCache[address]
 	if ok {
@@ -59,7 +59,7 @@ func (sss *SeaStorageState) GetUser(name string, publicKey string) (*user.User, 
 	return nil, errors.New("User doesn't exists. ")
 }
 
-func (sss *SeaStorageState) CreateUser(name string, publicKey string) error {
+func (sss *SeaStorageState) CreateUser(name string, publicKey crypto.Address) error {
 	address := MakeAddress(AddressTypeUser, name, publicKey)
 	_, ok := sss.userCache[address]
 	if ok {
@@ -144,7 +144,7 @@ func (sss *SeaStorageState) saveGroup(g *user.Group, address crypto.Address) err
 	return nil
 }
 
-func (sss *SeaStorageState) GetSea(name string, publicKey string) (*sea.Sea, error) {
+func (sss *SeaStorageState) GetSea(name string, publicKey crypto.Address) (*sea.Sea, error) {
 	address := MakeAddress(AddressTypeSea, name, publicKey)
 	seaBytes, ok := sss.seaCache[address]
 	if ok {
@@ -161,7 +161,7 @@ func (sss *SeaStorageState) GetSea(name string, publicKey string) (*sea.Sea, err
 	return nil, errors.New("Sea doesn't exists. ")
 }
 
-func (sss *SeaStorageState) CreateSea(name string, publicKey string) error {
+func (sss *SeaStorageState) CreateSea(name string, publicKey crypto.Address) error {
 	address := MakeAddress(AddressTypeSea, name, publicKey)
 	_, ok := sss.seaCache[address]
 	if ok {
@@ -223,14 +223,14 @@ func deserializeSea(data []byte) (sea *sea.Sea, err error) {
 	return sea, err
 }
 
-func MakeAddress(addressType AddressType, name string, publicKey string) crypto.Address {
+func MakeAddress(addressType AddressType, name string, publicKey crypto.Address) crypto.Address {
 	switch addressType {
 	case AddressTypeUser:
-		return crypto.Address(Namespace + UserNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), []byte(publicKey)}, []byte{})))
+		return crypto.Address(Namespace + UserNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), publicKey.ToBytes()}, []byte{})))
 	case AddressTypeGroup:
 		return crypto.Address(Namespace + GroupNamespace + crypto.SHA384([]byte(name)))
 	case AddressTypeSea:
-		return crypto.Address(Namespace + SeaNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), []byte(publicKey)}, []byte{})))
+		return crypto.Address(Namespace + SeaNamespace + crypto.SHA384(bytes.Join([][]byte{[]byte(name), publicKey.ToBytes()}, []byte{})))
 	}
 	return crypto.Address("")
 }

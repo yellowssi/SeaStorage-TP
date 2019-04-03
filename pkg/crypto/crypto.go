@@ -44,6 +44,27 @@ func (address Address) ToBytes() []byte {
 	return addressBytes
 }
 
+func (address Address) Encryption(data []byte) []byte {
+	pub, err := ellcurv.ParsePubKey(address.ToBytes(), ellcurv.S256())
+	if err != nil {
+		panic(err)
+	}
+	result, err := ellcurv.Encrypt(pub, data)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func Decryption(privateKey []byte, data []byte) []byte {
+	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), privateKey)
+	result, err := ellcurv.Decrypt(priv, data)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 func GenerateRandomKey(len int) []byte {
 	if len != 128 && len != 256 && len != 512 {
 		panic(errors.New("AES key length should be 128 or 256 or 512"))
@@ -73,7 +94,7 @@ func (k Key) ToBytes() []byte {
 	return keyBytes
 }
 
-func (k Key) Encrypted(address Address) []byte {
+func (k Key) EncryptedByPublicKey(address Address) []byte {
 	pub, err := ellcurv.ParsePubKey(address.ToBytes(), ellcurv.S256())
 	result, err := ellcurv.Encrypt(pub, k.ToBytes())
 	if err != nil {

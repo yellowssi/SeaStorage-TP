@@ -12,9 +12,23 @@ type User struct {
 	Root   *storage.Root
 }
 
+type EncryptedUser struct {
+	Name  string
+	Group mapset.Set
+	Root  *storage.EncryptedRoot
+}
+
 func NewUser(name string) *User {
 	var groups mapset.Set
 	return &User{Name: name, Groups: groups, Root: storage.NewRoot()}
+}
+
+func NewEncryptedUser(name string, group mapset.Set, root *storage.EncryptedRoot) *EncryptedUser {
+	return &EncryptedUser{
+		Name:  name,
+		Group: group,
+		Root:  root,
+	}
 }
 
 func (u *User) JoinGroup(group crypto.Address) bool {

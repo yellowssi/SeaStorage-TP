@@ -3,20 +3,20 @@ package sea
 import "time"
 
 type Sea struct {
-	name       string
-	totalSpace uint
-	freeSpace  uint
+	Name       string
+	TotalSpace uint
+	FreeSpace  uint
 }
 
 type Fragment struct {
-	timestamp time.Time
-	data      []byte
+	Timestamp time.Time
+	Data      []byte
 }
 
 func NewSea(name string) *Sea {
-	return &Sea{name: name, totalSpace: 0, freeSpace: 0}
+	return &Sea{Name: name, TotalSpace: 0, FreeSpace: 0}
 }
 
 func NewFragment(data []byte) *Fragment {
-	return &Fragment{timestamp: time.Now(), data: data}
+	return &Fragment{Timestamp: time.Now(), Data: data}
 }

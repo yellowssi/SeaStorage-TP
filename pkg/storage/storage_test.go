@@ -37,14 +37,3 @@ func TestValidPath(t *testing.T) {
 		t.Fail()
 	}
 }
-
-func TestValidFile(t *testing.T) {
-	fragments := make([]*Fragment, 3)
-	for i := range fragments {
-		fragments[i] = NewFragment("", make([]*FragmentSea, i+1))
-	}
-	err := validFile("/test/", "test", fragments)
-	if err != nil {
-		t.Error(err)
-	}
-}
