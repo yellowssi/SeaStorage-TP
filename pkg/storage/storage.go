@@ -85,16 +85,24 @@ func validInfo(path string, name string) error {
 	return nil
 }
 
-func (root *Root) SearchKey(key crypto.Key, used bool) (hash crypto.Hash) {
+func (root *Root) SearchKey(key crypto.Key, generate bool, creation bool) crypto.Hash {
 	keyBytes, _ := hex.DecodeString(string(key))
 	keyIndex := crypto.SHA512(keyBytes)
-	_, ok := root.Keys[crypto.Hash(keyIndex)]
+	fileKey, ok := root.Keys[crypto.Hash(keyIndex)]
 	if ok {
+		if creation {
+			fileKey.Used++
+		}
 		return crypto.Hash(keyIndex)
-	} else if used {
+	} else if generate {
+		fileKey = NewFileKey(key)
+		if creation {
+			fileKey.Used++
+		}
+		root.Keys[crypto.Hash(keyIndex)] = fileKey
 		return crypto.Hash(keyIndex)
 	}
-	return hash
+	return ""
 }
 
 func (root *Root) updateKeyUsed(keyUsed map[crypto.Hash]int) {
@@ -115,7 +123,7 @@ func (root *Root) CreateFile(path string, info FileInfo) error {
 	if err != nil {
 		return err
 	}
-	fileKeyIndex := root.SearchKey(info.Key, true)
+	fileKeyIndex := root.SearchKey(info.Key, true, true)
 	return root.Home.CreateFile(path, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
 }
 
@@ -144,7 +152,7 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 	if err != nil {
 		return err
 	}
-	_ = root.SearchKey(info.Key, true)
+	_ = root.SearchKey(info.Key, true, false)
 	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512([]byte(info.Key)), info.Hash, info.Fragments)
 	if err != nil {
 		return err
@@ -153,8 +161,13 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 	return nil
 }
 
-func (root *Root) PublicKey(address crypto.Address, keyHash crypto.Hash, key crypto.Key) error {
-	target, ok := root.Keys[keyHash]
+func (root *Root) PublicKey(address crypto.Address, key crypto.Key) error {
+	keyBytes, err := address.Encryption(key.ToBytes())
+	if err != nil {
+		return err
+	}
+	keyIndex := crypto.SHA512(keyBytes)
+	target, ok := root.Keys[keyIndex]
 	if ok {
 		if target.Key.Verify(address, key) {
 			target.Key = key

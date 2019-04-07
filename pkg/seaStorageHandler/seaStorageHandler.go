@@ -57,6 +57,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case seaStoragePayload.PayloadTypeUserUpdateFileKey:
 		return state.UserUpdateFileKey(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserPublicKey:
+		return state.UserPublicKey(payload.Name, user, payload.Key)
 	case seaStoragePayload.PayloadTypeUserListDirectory:
 	case seaStoragePayload.PayloadTypeUserGetFileInfo:
 	// TODO: User Join Group & Search Group

@@ -307,6 +307,19 @@ func (sss *SeaStorageState) UserUpdateFileKey(username string, publicKey crypto.
 	return sss.saveUser(u, address)
 }
 
+func (sss *SeaStorageState) UserPublicKey(username string, publicKey crypto.Address, key crypto.Key) error {
+	u, err := sss.GetUser(username, publicKey)
+	if err != nil {
+		return err
+	}
+	err = u.Root.PublicKey(publicKey, key)
+	if err != nil {
+		return err
+	}
+	address := MakeAddress(AddressTypeUser, username, publicKey)
+	return sss.saveUser(u, address)
+}
+
 func serialize(i interface{}) (data []byte, err error) {
 	buf := bytes.NewBuffer(data)
 	enc := gob.NewEncoder(buf)
