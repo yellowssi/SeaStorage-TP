@@ -17,7 +17,7 @@ func (mpt *MPT) GetHash() []byte {
 }
 
 /**
- * Generate Root Node If Root Node is Nil
+ * Generate Home Node If Home Node is Nil
  */
 func (mpt *MPT) GenerateRoot(value HashInterface) bool {
 	if mpt.RootNode != nil {
@@ -351,7 +351,7 @@ func RemoveNode(nodeInterface NodeInterface, key *BitArray) bool {
 }
 
 /**
- * Recursive hash Update From Root Node
+ * Recursive hash Update From Home Node
  */
 func (mpt *MPT) RootRecursiveHashUpdate() {
 	RecursiveHashUpdate(mpt.RootNode)

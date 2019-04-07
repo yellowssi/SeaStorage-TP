@@ -14,35 +14,34 @@ const _ = proto.ProtoPackageIsVersion3
 type PayloadType uint16
 
 var (
-	PayloadTypeUnset            PayloadType = 0
-	PayloadTypeCreateUser       PayloadType = 1
-	PayloadTypeCreateGroup      PayloadType = 2
-	PayloadTypeCreateSea        PayloadType = 3
-	PayloadTypeSearchSharedFile PayloadType = 4
+	PayloadTypeUnset             PayloadType = 0
+	PayloadTypeCreateUser        PayloadType = 1
+	PayloadTypeCreateGroup       PayloadType = 2
+	PayloadTypeCreateSea         PayloadType = 3
+	PayloadTypeSearchSharedFile  PayloadType = 4
+	PayloadTypeGetSharedFileInfo PayloadType = 5
 )
 
 var (
-	PayloadTypeUserCreateFile          PayloadType = 100
-	PayloadTypeUserCreateDirectory     PayloadType = 101
-	PayloadTypeUserUpdateFile          PayloadType = 102
-	PayloadTypeUserShareFiles          PayloadType = 103
-	PayloadTypeUserPublicKey           PayloadType = 104
-	PayloadTypeUserListDirectory       PayloadType = 105
-	PayloadTypeUserGetFileInfo         PayloadType = 106
-	PayloadTypeUserListSharedDirectory PayloadType = 107
-	PayloadTypeUserGetSharedFileInfo   PayloadType = 108
+	PayloadTypeUserCreateFile      PayloadType = 100
+	PayloadTypeUserCreateDirectory PayloadType = 101
+	PayloadTypeUserUpdateFileName  PayloadType = 102
+	PayloadTypeUserUpdateFileData  PayloadType = 103
+	PayloadTypeUserUpdateFileKey   PayloadType = 104
+	PayloadTypeUserPublicKey       PayloadType = 105
+	PayloadTypeUserListDirectory   PayloadType = 106
+	PayloadTypeUserGetFileInfo     PayloadType = 107
 )
 
 var (
-	PayloadTypeGroupCreateFile          PayloadType = 200
-	PayloadTypeGroupCreateDirectory     PayloadType = 201
-	PayloadTypeGroupUpdateFile          PayloadType = 202
-	PayloadTypeGroupShareFiles          PayloadType = 203
-	PayloadTypeGroupPublicKey           PayloadType = 204
-	PayloadTypeGroupListDirectory       PayloadType = 205
-	PayloadTypeGroupGetFileInfo         PayloadType = 206
-	PayloadTypeGroupListSharedDirectory PayloadType = 207
-	PayloadTypeGroupGetSharedFileInfo   PayloadType = 208
+	PayloadTypeGroupCreateFile      PayloadType = 200
+	PayloadTypeGroupCreateDirectory PayloadType = 201
+	PayloadTypeGroupUpdateFileName  PayloadType = 202
+	PayloadTypeGroupUpdateFileData  PayloadType = 203
+	PayloadTypeGroupUpdateFileKey   PayloadType = 204
+	PayloadTypeGroupPublicKey       PayloadType = 205
+	PayloadTypeGroupListDirectory   PayloadType = 206
+	PayloadTypeGroupGetFileInfo     PayloadType = 207
 )
 
 var (
@@ -57,17 +56,17 @@ type SeaStoragePayload struct {
 	Action   PayloadType
 	Name     string // default: ""
 	PWD      string // default: "/"
-	Create   string // default: ""
+	Target   string // default: ""
 	Key      crypto.Key
 	FileInfo storage.FileInfo
 }
 
-func NewSeaStoragePayload(action PayloadType, name string, pwd string, create string, info storage.FileInfo) *SeaStoragePayload {
+func NewSeaStoragePayload(action PayloadType, name string, pwd string, target string, info storage.FileInfo) *SeaStoragePayload {
 	return &SeaStoragePayload{
 		Action:   action,
 		Name:     name,
 		PWD:      pwd,
-		Create:   create,
+		Target:   target,
 		FileInfo: info,
 	}
 }

@@ -17,8 +17,6 @@ type INode interface {
 	GetName() string
 	GetSize() uint
 	GetHash() crypto.Hash
-	GetShared() bool
-	SetShared(shared bool)
 }
 
 type File struct {
@@ -27,7 +25,6 @@ type File struct {
 	Hash      crypto.Hash
 	KeyIndex  crypto.Hash
 	Fragments []*Fragment
-	Shared    bool
 }
 
 type Directory struct {
@@ -35,7 +32,6 @@ type Directory struct {
 	Size   uint
 	Hash   crypto.Hash
 	INodes []INode
-	Shared bool
 }
 
 type Fragment struct {
@@ -59,11 +55,11 @@ func NewFileKey(key crypto.Key) *FileKey {
 }
 
 func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments []*Fragment) *File {
-	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments, Shared: false}
+	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments}
 }
 
 func NewDirectory(name string) *Directory {
-	return &Directory{Name: name, Size: 0, Hash: "", INodes: make([]INode, 0), Shared: false}
+	return &Directory{Name: name, Size: 0, Hash: "", INodes: make([]INode, 0)}
 }
 
 func NewFragment(hash crypto.Hash, seas []*FragmentSea) *Fragment {
@@ -86,14 +82,6 @@ func (f *File) GetHash() crypto.Hash {
 	return f.Hash
 }
 
-func (f *File) GetShared() bool {
-	return f.Shared
-}
-
-func (f *File) SetShared(shared bool) {
-	f.Shared = shared
-}
-
 func (d *Directory) GetName() string {
 	return d.Name
 }
@@ -104,14 +92,6 @@ func (d *Directory) GetSize() uint {
 
 func (d *Directory) GetHash() crypto.Hash {
 	return d.Hash
-}
-
-func (d *Directory) GetShared() bool {
-	return d.Shared
-}
-
-func (d *Directory) SetShared(shared bool) {
-	d.Shared = shared
 }
 
 func generateINodeInfos(iNodes []INode) []INodeInfo {
@@ -189,7 +169,7 @@ func (d *Directory) checkINodeExists(path string, name string) (INode, error) {
 	return nil, errors.New("File or Directory doesn't exists: " + path + name)
 }
 
-// Create directories recursively
+// Target directories recursively
 // If there is the same Name file exists, it will return error.
 // Else, it will return the pointer of the determination directory INode.
 func (d *Directory) CreateDirectory(path string) (*Directory, error) {
@@ -336,17 +316,17 @@ func (d *Directory) UpdateFileData(path string, name string, size uint, hash cry
 }
 
 // Update the Key of file
-func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments []*Fragment) (err error, operations map[crypto.Hash]int) {
+func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments []*Fragment) (operations map[crypto.Hash]int, err error) {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
-		return err, operations
+		return operations, err
 	}
 	operations[file.KeyIndex]--
 	file.KeyIndex = keyHash
 	file.Hash = hash
 	file.Fragments = fragments
 	operations[keyHash]++
-	return nil, operations
+	return operations, nil
 }
 
 // Delete the file finding by the Name under the path.

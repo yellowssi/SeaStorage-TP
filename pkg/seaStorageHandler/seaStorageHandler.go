@@ -37,45 +37,39 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	switch payload.Action {
 	// Base Action
 	case seaStoragePayload.PayloadTypeCreateUser:
-		return state.CreateUser(payload.Create, user)
+		return state.CreateUser(payload.Target, user)
 	case seaStoragePayload.PayloadTypeCreateGroup:
-		return state.CreateGroup(payload.Create, seaStorageState.MakeAddress(seaStorageState.AddressTypeUser, payload.Name, user), payload.Key)
+		return state.CreateGroup(payload.Target, seaStorageState.MakeAddress(seaStorageState.AddressTypeUser, payload.Name, user), payload.Key)
 	case seaStoragePayload.PayloadTypeCreateSea:
-		return state.CreateSea(payload.Create, user)
+		return state.CreateSea(payload.Target, user)
 	case seaStoragePayload.PayloadTypeSearchSharedFile:
+	case seaStoragePayload.PayloadTypeGetSharedFileInfo:
 
 	// User Action
 	case seaStoragePayload.PayloadTypeUserCreateDirectory:
-		u, err := state.GetUser(payload.Name, user)
-		if err != nil {
-			return err
-		}
-		return u.Root.CreateDirectory(payload.PWD + "/" + payload.Create)
+		return state.UserCreateDirectory(payload.Name, user, payload.PWD, payload.Target)
 	case seaStoragePayload.PayloadTypeUserCreateFile:
-		u, err := state.GetUser(payload.Name, user)
-		if err != nil {
-			return err
-		}
-		return u.Root.CreateFile(payload.PWD, payload.FileInfo)
-	case seaStoragePayload.PayloadTypeUserUpdateFile:
-	case seaStoragePayload.PayloadTypeUserShareFiles:
+		return state.UserCreateFile(payload.Name, user, payload.PWD, payload.FileInfo)
+	case seaStoragePayload.PayloadTypeUserUpdateFileName:
+		return state.UserUpdateFileName(payload.Name, payload.PWD, payload.Target)
+	case seaStoragePayload.PayloadTypeUserUpdateFileData:
+		return state.UserUpdateFileData(payload.Name, user, payload.PWD, payload.FileInfo)
+	case seaStoragePayload.PayloadTypeUserUpdateFileKey:
+		return state.UserUpdateFileKey(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserPublicKey:
 	case seaStoragePayload.PayloadTypeUserListDirectory:
 	case seaStoragePayload.PayloadTypeUserGetFileInfo:
-	case seaStoragePayload.PayloadTypeUserListSharedDirectory:
-	case seaStoragePayload.PayloadTypeUserGetSharedFileInfo:
 	// TODO: User Join Group & Search Group
 
 	// Group Action
-	case seaStoragePayload.PayloadTypeGroupCreateDirectory:
-	case seaStoragePayload.PayloadTypeGroupCreateFile:
-	case seaStoragePayload.PayloadTypeGroupUpdateFile:
-	case seaStoragePayload.PayloadTypeGroupShareFiles:
-	case seaStoragePayload.PayloadTypeGroupPublicKey:
-	case seaStoragePayload.PayloadTypeGroupListDirectory:
-	case seaStoragePayload.PayloadTypeGroupGetFileInfo:
-	case seaStoragePayload.PayloadTypeGroupListSharedDirectory:
-	case seaStoragePayload.PayloadTypeGroupGetSharedFileInfo:
+	//case seaStoragePayload.PayloadTypeGroupCreateDirectory:
+	//case seaStoragePayload.PayloadTypeGroupCreateFile:
+	//case seaStoragePayload.PayloadTypeGroupUpdateFileName:
+	//case seaStoragePayload.PayloadTypeGroupUpdateFileData:
+	//case seaStoragePayload.PayloadTypeGroupUpdateFileKey:
+	//case seaStoragePayload.PayloadTypeGroupPublicKey:
+	//case seaStoragePayload.PayloadTypeGroupListDirectory:
+	//case seaStoragePayload.PayloadTypeGroupGetFileInfo:
 	// TODO: Invite User & Access User Join Group & Leave Member
 
 	// Sea Action

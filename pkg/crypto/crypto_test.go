@@ -15,3 +15,9 @@ func TestAddress(t *testing.T) {
 	println(hash)
 	println(address)
 }
+
+func TestSHA512(t *testing.T) {
+	hash := SHA512([]byte("SeaStorage"))
+	println(hash)
+	println(hash[:64])
+}

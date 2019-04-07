@@ -12,6 +12,7 @@ require (
 	github.com/hyperledger/sawtooth-sdk-go v0.1.1
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/kkdai/bstream v0.0.0-20181106074824-b3251f7901ec // indirect
+	github.com/mitchellh/copystructure v1.0.0
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/pebbe/zmq4 v1.0.0 // indirect
