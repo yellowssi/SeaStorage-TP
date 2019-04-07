@@ -268,6 +268,19 @@ func (sss *SeaStorageState) UserCreateFile(username string, publicKey crypto.Add
 	return sss.saveUser(u, address)
 }
 
+func (sss *SeaStorageState) UserUpdateFileName(username string, publicKey crypto.Address, path string, name string, newName string) error {
+	u, err := sss.GetUser(username, publicKey)
+	if err != nil {
+		return err
+	}
+	err = u.Root.UpdateFileName(path, name, newName)
+	if err != nil {
+		return err
+	}
+	address := MakeAddress(AddressTypeUser, username, publicKey)
+	return sss.saveUser(u, address)
+}
+
 func (sss *SeaStorageState) UserUpdateFileData(username string, publicKey crypto.Address, path string, info storage.FileInfo) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {

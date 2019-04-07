@@ -57,16 +57,18 @@ type SeaStoragePayload struct {
 	Name     string // default: ""
 	PWD      string // default: "/"
 	Target   string // default: ""
+	Target2  string // default: ""
 	Key      crypto.Key
 	FileInfo storage.FileInfo
 }
 
-func NewSeaStoragePayload(action PayloadType, name string, pwd string, target string, info storage.FileInfo) *SeaStoragePayload {
+func NewSeaStoragePayload(action PayloadType, name string, pwd string, target string, target2 string, info storage.FileInfo) *SeaStoragePayload {
 	return &SeaStoragePayload{
 		Action:   action,
 		Name:     name,
 		PWD:      pwd,
 		Target:   target,
+		Target2:  target2,
 		FileInfo: info,
 	}
 }

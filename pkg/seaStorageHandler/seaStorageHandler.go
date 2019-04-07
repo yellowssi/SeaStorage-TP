@@ -51,7 +51,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case seaStoragePayload.PayloadTypeUserCreateFile:
 		return state.UserCreateFile(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserUpdateFileName:
-		return state.UserUpdateFileName(payload.Name, payload.PWD, payload.Target)
+		return state.UserUpdateFileName(payload.Name, user, payload.PWD, payload.Target, payload.Target2)
 	case seaStoragePayload.PayloadTypeUserUpdateFileData:
 		return state.UserUpdateFileData(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserUpdateFileKey:
