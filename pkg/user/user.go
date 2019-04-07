@@ -44,7 +44,3 @@ func (u *User) LeaveGroup(group crypto.Address) bool {
 func (u *User) IsInGroup(group crypto.Address) bool {
 	return u.Groups.Contains(group)
 }
-
-func (u *User) Rename(name string) {
-	u.Name = name
-}

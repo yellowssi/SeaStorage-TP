@@ -34,14 +34,6 @@ func GenerateGroup(name string, leader crypto.Address) *Group {
 	return NewGroup(name, leader, map[crypto.Address]Role{leader: RoleOwner}, storage.GenerateRoot())
 }
 
-func (g *Group) Rename(user crypto.Address, name string) bool {
-	if g.Leader != user {
-		return false
-	}
-	g.Name = name
-	return false
-}
-
 func (g *Group) UpdateLeader(user crypto.Address, newLeader crypto.Address) bool {
 	if user == g.Leader {
 		g.Leader = newLeader
