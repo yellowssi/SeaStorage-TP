@@ -42,8 +42,6 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return state.CreateGroup(payload.Target, seaStorageState.MakeAddress(seaStorageState.AddressTypeUser, payload.Name, user), payload.Key)
 	case seaStoragePayload.PayloadTypeCreateSea:
 		return state.CreateSea(payload.Target, user)
-	case seaStoragePayload.PayloadTypeSearchSharedFile:
-	case seaStoragePayload.PayloadTypeGetSharedFileInfo:
 
 	// User Action
 	case seaStoragePayload.PayloadTypeUserCreateDirectory:
@@ -58,8 +56,6 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return state.UserUpdateFileKey(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserPublicKey:
 		return state.UserPublicKey(payload.Name, user, payload.Key)
-	case seaStoragePayload.PayloadTypeUserListDirectory:
-	case seaStoragePayload.PayloadTypeUserGetFileInfo:
 	// TODO: User Join Group & Search Group
 
 	// Group Action

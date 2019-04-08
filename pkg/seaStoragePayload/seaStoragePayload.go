@@ -14,12 +14,10 @@ const _ = proto.ProtoPackageIsVersion3
 type PayloadType uint16
 
 var (
-	PayloadTypeUnset             PayloadType = 0
-	PayloadTypeCreateUser        PayloadType = 1
-	PayloadTypeCreateGroup       PayloadType = 2
-	PayloadTypeCreateSea         PayloadType = 3
-	PayloadTypeSearchSharedFile  PayloadType = 4
-	PayloadTypeGetSharedFileInfo PayloadType = 5
+	PayloadTypeUnset       PayloadType = 0
+	PayloadTypeCreateUser  PayloadType = 1
+	PayloadTypeCreateGroup PayloadType = 2
+	PayloadTypeCreateSea   PayloadType = 3
 )
 
 var (
@@ -29,8 +27,6 @@ var (
 	PayloadTypeUserUpdateFileData  PayloadType = 103
 	PayloadTypeUserUpdateFileKey   PayloadType = 104
 	PayloadTypeUserPublicKey       PayloadType = 105
-	PayloadTypeUserListDirectory   PayloadType = 106
-	PayloadTypeUserGetFileInfo     PayloadType = 107
 )
 
 var (
@@ -40,8 +36,6 @@ var (
 	PayloadTypeGroupUpdateFileData  PayloadType = 203
 	PayloadTypeGroupUpdateFileKey   PayloadType = 204
 	PayloadTypeGroupPublicKey       PayloadType = 205
-	PayloadTypeGroupListDirectory   PayloadType = 206
-	PayloadTypeGroupGetFileInfo     PayloadType = 207
 )
 
 var (
