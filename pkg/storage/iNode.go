@@ -363,10 +363,7 @@ func (d *Directory) ToBytes() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(d)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return buf.Bytes(), err
 }
 
 func FromBytes(data []byte) (d *Directory, err error) {

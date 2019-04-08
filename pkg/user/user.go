@@ -7,21 +7,20 @@ import (
 )
 
 type User struct {
-	Name   string
 	Groups mapset.Set
 	Root   *storage.Root
 }
 
-func NewUser(name string, groups mapset.Set, root *storage.Root) *User {
+func NewUser(groups mapset.Set, root *storage.Root) *User {
 	return &User{
-		Name:   name,
 		Groups: groups,
-		Root:   root}
+		Root:   root,
+	}
 }
 
-func GenerateUser(name string) *User {
+func GenerateUser() *User {
 	var group mapset.Set
-	return NewUser(name, group, storage.GenerateRoot())
+	return NewUser(group, storage.GenerateRoot())
 }
 
 func (u *User) JoinGroup(group crypto.Address) bool {

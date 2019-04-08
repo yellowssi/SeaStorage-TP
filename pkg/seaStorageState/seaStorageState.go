@@ -77,7 +77,7 @@ func (sss *SeaStorageState) CreateUser(username string, publicKey crypto.Address
 	if len(string(results[string(address)])) > 0 {
 		return errors.New("User exists. ")
 	}
-	return sss.saveUser(user.GenerateUser(username), address)
+	return sss.saveUser(user.GenerateUser(), address)
 }
 
 func (sss *SeaStorageState) saveUser(u *user.User, address crypto.Address) error {
@@ -179,7 +179,7 @@ func (sss *SeaStorageState) CreateSea(seaName string, publicKey crypto.Address) 
 	if len(string(results[string(address)])) > 0 {
 		return errors.New("Sea exists. ")
 	}
-	return sss.saveSea(sea.NewSea(seaName), address)
+	return sss.saveSea(sea.NewSea(), address)
 }
 
 func (sss *SeaStorageState) saveSea(s *sea.Sea, address crypto.Address) error {
@@ -200,11 +200,6 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address crypto.Address) error {
 	return nil
 }
 
-func (sss *SeaStorageState) GetSharedFiles() (storage.INode, error) {
-	// TODO: Get Shared Files (For Search)
-	return nil, nil
-}
-
 func (sss *SeaStorageState) UserShareFile(username string, publicKey crypto.Address, path string, target string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
@@ -220,10 +215,6 @@ func (sss *SeaStorageState) UserShareFile(username string, publicKey crypto.Addr
 	}
 	address := MakeAddress(AddressTypeShared, username, publicKey)
 	return sss.saveSharedFiles(dst.(storage.INode), address)
-}
-
-func (sss *SeaStorageState) GroupShareFile() error {
-	return nil
 }
 
 func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address crypto.Address) error {
