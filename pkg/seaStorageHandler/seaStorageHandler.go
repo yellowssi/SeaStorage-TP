@@ -29,7 +29,7 @@ func (h *SeaStorageHandler) FamilyNamespaces() []string {
 func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
 	header := request.GetHeader()
 	user := crypto.Address(header.GetSignerPublicKey())
-	payload, err := seaStoragePayload.FromBytes(request.GetPayload())
+	payload, err := seaStoragePayload.PayloadFromBytes(request.GetPayload())
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	// Sea Action
 	case seaStoragePayload.PayloadTypeSeaStoreFile:
-	case seaStoragePayload.PayloadTypeSeaUpdateFile:
+		return state.SeaStoreFile(payload.Name, user, payload.Hash, payload.Signature)
 
 	default:
 		return &processor.InvalidTransactionError{Msg: fmt.Sprint("Invalid Action: ", payload.Action)}

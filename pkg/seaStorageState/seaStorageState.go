@@ -11,9 +11,12 @@ import (
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/sea"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/user"
+	"time"
 )
 
 type AddressType uint8
+
+var deadlineTime, _ = time.ParseDuration("3h")
 
 var (
 	AddressTypeUser   AddressType = 0
@@ -61,21 +64,21 @@ func (sss *SeaStorageState) GetUser(username string, publicKey crypto.Address) (
 		sss.userCache[address] = results[string(address)]
 		return deserializeUser(results[string(address)])
 	}
-	return nil, errors.New("User doesn't exists. ")
+	return nil, errors.New("user doesn't exists")
 }
 
 func (sss *SeaStorageState) CreateUser(username string, publicKey crypto.Address) error {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	_, ok := sss.userCache[address]
 	if ok {
-		return errors.New("User exists. ")
+		return errors.New("user exists")
 	}
 	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return err
 	}
 	if len(string(results[string(address)])) > 0 {
-		return errors.New("User exists. ")
+		return errors.New("user exists")
 	}
 	return sss.saveUser(user.GenerateUser(), address)
 }
@@ -112,21 +115,21 @@ func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 		sss.seaCache[address] = results[string(address)]
 		return deserializeGroup(results[string(address)])
 	}
-	return nil, errors.New("Group doesn't exists. ")
+	return nil, errors.New("group doesn't exists")
 }
 
 func (sss *SeaStorageState) CreateGroup(groupName string, leader crypto.Address, key crypto.Key) error {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
 	_, ok := sss.groupCache[address]
 	if ok {
-		return errors.New("Group exists. ")
+		return errors.New("group exists")
 	}
 	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return err
 	}
 	if len(results[string(address)]) > 0 {
-		return errors.New("Group exists. ")
+		return errors.New("group exists")
 	}
 	return sss.saveGroup(user.GenerateGroup(groupName, leader), address)
 }
@@ -163,21 +166,21 @@ func (sss *SeaStorageState) GetSea(seaName string, publicKey crypto.Address) (*s
 		sss.seaCache[address] = results[string(address)]
 		return deserializeSea(results[string(address)])
 	}
-	return nil, errors.New("Sea doesn't exists. ")
+	return nil, errors.New("sea doesn't exists")
 }
 
 func (sss *SeaStorageState) CreateSea(seaName string, publicKey crypto.Address) error {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	_, ok := sss.seaCache[address]
 	if ok {
-		return errors.New("Sea exists. ")
+		return errors.New("sea exists")
 	}
 	results, err := sss.context.GetState([]string{string(address)})
 	if err != nil {
 		return err
 	}
 	if len(string(results[string(address)])) > 0 {
-		return errors.New("Sea exists. ")
+		return errors.New("sea exists")
 	}
 	return sss.saveSea(sea.NewSea(), address)
 }
@@ -309,6 +312,27 @@ func (sss *SeaStorageState) UserPublicKey(username string, publicKey crypto.Addr
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
+}
+
+func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey crypto.Address, hash crypto.Hash, sign user.OperationSignature) error {
+	s, err := sss.GetSea(seaName, publicKey)
+	if err != nil {
+		return err
+	}
+	if !sign.Verify() || sign.Operation.Timestamp.Add(deadlineTime).Before(time.Now()) {
+		return errors.New("signature is invalid")
+	}
+	u, err := sss.GetUser(sign.Operation.Owner, sign.Operation.PublicKey)
+	if err != nil {
+		return err
+	}
+	err = u.Root.AddSea(sign.Operation.Path, sign.Operation.Name, hash, storage.NewFragmentSea(publicKey))
+	if err != nil {
+		return err
+	}
+	s.Handles++
+	address := MakeAddress(AddressTypeSea, seaName, publicKey)
+	return sss.saveSea(s, address)
 }
 
 func serialize(i interface{}) (data []byte, err error) {

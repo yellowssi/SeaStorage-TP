@@ -12,28 +12,37 @@ import (
 )
 
 type Hash string
-type Address string
-type Key string
+type Address string // User or Sea Address (Public Key)
+type Key string     // Used to encrypt file
 
-func SHA256(data []byte) Hash {
+func sha256Bytes(data []byte) []byte {
 	hashHandler := sha256.New()
 	hashHandler.Write(data)
-	hashBytes := hashHandler.Sum(nil)
-	return HashFromBytes(hashBytes)
+	return hashHandler.Sum(nil)
+}
+
+func SHA256(data []byte) Hash {
+	return HashFromBytes(sha256Bytes(data))
+}
+
+func sha384Bytes(data []byte) []byte {
+	hashHandler := sha512.New384()
+	hashHandler.Write(data)
+	return hashHandler.Sum(nil)
 }
 
 func SHA384(data []byte) Hash {
-	hashHandler := sha512.New384()
+	return HashFromBytes(sha384Bytes(data))
+}
+
+func sha512Bytes(data []byte) []byte {
+	hashHandler := sha512.New()
 	hashHandler.Write(data)
-	hashBytes := hashHandler.Sum(nil)
-	return HashFromBytes(hashBytes)
+	return hashHandler.Sum(nil)
 }
 
 func SHA512(data []byte) Hash {
-	hashHandler := sha512.New()
-	hashHandler.Write(data)
-	hashBytes := hashHandler.Sum(nil)
-	return HashFromBytes(hashBytes)
+	return HashFromBytes(sha512Bytes(data))
 }
 
 func AddressFromBytes(addressBytes []byte) Address {
@@ -55,6 +64,29 @@ func (address Address) Encryption(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (address Address) Verify(sign []byte, data []byte) bool {
+	pub, err := ellcurv.ParsePubKey(address.ToBytes(), ellcurv.S256())
+	if err != nil {
+		return false
+	}
+	signature, err := ellcurv.ParseSignature(sign, ellcurv.S256())
+	if err != nil {
+		return false
+	}
+	hash := sha512Bytes(data)
+	return signature.Verify(hash, pub)
+}
+
+func Sign(privateKey []byte, data []byte) ([]byte, error) {
+	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), privateKey)
+	hash := sha512Bytes(data)
+	signature, err := priv.Sign(hash)
+	if err != nil {
+		return nil, err
+	}
+	return signature.Serialize(), nil
 }
 
 func Decryption(privateKey []byte, data []byte) ([]byte, error) {

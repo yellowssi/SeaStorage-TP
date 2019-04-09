@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"github.com/deckarep/golang-set"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"strings"
+	"time"
 )
 
 type FileKey struct {
@@ -24,7 +26,7 @@ type File struct {
 	Size      uint
 	Hash      crypto.Hash
 	KeyIndex  crypto.Hash
-	Fragments []*Fragment
+	Fragments mapset.Set // set of []*Fragment
 }
 
 type Directory struct {
@@ -36,12 +38,13 @@ type Directory struct {
 
 type Fragment struct {
 	Hash crypto.Hash
-	Seas []*FragmentSea
+	Seas mapset.Set // set of []*FragmentSea
 }
 
 type FragmentSea struct {
-	Address crypto.Address
-	Weight  int8
+	Address   crypto.Address
+	Weight    int8
+	Timestamp time.Time
 }
 
 type INodeInfo struct {
@@ -54,7 +57,7 @@ func NewFileKey(key crypto.Key) *FileKey {
 	return &FileKey{Key: key, Used: 0}
 }
 
-func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments []*Fragment) *File {
+func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments mapset.Set) *File {
 	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments}
 }
 
@@ -62,7 +65,7 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name, Size: 0, Hash: "", INodes: make([]INode, 0)}
 }
 
-func NewFragment(hash crypto.Hash, seas []*FragmentSea) *Fragment {
+func NewFragment(hash crypto.Hash, seas mapset.Set) *Fragment {
 	return &Fragment{Hash: hash, Seas: seas}
 }
 
@@ -240,7 +243,8 @@ func (d *Directory) UpdateDirectoryName(path string, name string) error {
 }
 
 // Delete directory Key.
-func (d *Directory) DeleteDirectoryKey() (operations map[crypto.Hash]uint) {
+func (d *Directory) DeleteDirectoryKey() map[crypto.Hash]uint {
+	operations := make(map[crypto.Hash]uint)
 	for _, iNode := range d.INodes {
 		switch iNode.(type) {
 		case *Directory:
@@ -278,7 +282,7 @@ func (d *Directory) DeleteDirectory(path string, name string) (operations map[cr
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.Hash, keyHash crypto.Hash, fragments []*Fragment) error {
+func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.Hash, keyHash crypto.Hash, fragments mapset.Set) error {
 	dir, err := d.checkPathExists(path)
 	if err != nil {
 		return err
@@ -304,7 +308,7 @@ func (d *Directory) UpdateFileName(path string, name string, newName string) err
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(path string, name string, size uint, hash crypto.Hash, fragments []*Fragment) error {
+func (d *Directory) UpdateFileData(path string, name string, size uint, hash crypto.Hash, fragments mapset.Set) error {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return err
@@ -316,7 +320,7 @@ func (d *Directory) UpdateFileData(path string, name string, size uint, hash cry
 }
 
 // Update the Key of file
-func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments []*Fragment) (operations map[crypto.Hash]int, err error) {
+func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments mapset.Set) (operations map[crypto.Hash]int, err error) {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return operations, err
@@ -350,6 +354,25 @@ func (d *Directory) DeleteFile(path string, name string) (crypto.Hash, error) {
 	return "", errors.New("File doesn't exists: " + path + name)
 }
 
+func (d Directory) AddSea(path string, name string, hash crypto.Hash, sea *FragmentSea) error {
+	file, err := d.checkFileExists(path, name)
+	if err != nil {
+		return err
+	}
+	for _, fragment := range file.Fragments.ToSlice() {
+		if fragment.(*Fragment).Hash == hash {
+			for _, s := range fragment.(*Fragment).Seas.ToSlice() {
+				if s.(*FragmentSea).Address == sea.Address {
+					return errors.New("fragment stored")
+				}
+			}
+			fragment.(*Fragment).Seas.Add(sea)
+			return nil
+		}
+	}
+	return errors.New("fragment is not valid")
+}
+
 // List information of INodes in the path.
 func (d *Directory) List(path string) ([]INodeInfo, error) {
 	dir, err := d.checkPathExists(path)
@@ -366,7 +389,7 @@ func (d *Directory) ToBytes() ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-func FromBytes(data []byte) (d *Directory, err error) {
+func DirectoryFromBytes(data []byte) (d *Directory, err error) {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	err = dec.Decode(d)

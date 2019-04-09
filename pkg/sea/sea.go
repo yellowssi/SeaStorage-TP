@@ -21,7 +21,7 @@ type Operation struct {
 }
 
 type Sea struct {
-	Stars      int
+	Handles    int
 	Operations []Operation
 }
 
@@ -50,7 +50,7 @@ func NewOperation(action int8, owner crypto.Address, hash crypto.Hash, shared bo
 
 func NewSea() *Sea {
 	return &Sea{
-		Stars:      0,
+		Handles:    0,
 		Operations: make([]Operation, 0),
 	}
 }

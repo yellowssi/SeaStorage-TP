@@ -7,11 +7,12 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
+	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/user"
 )
 
 const _ = proto.ProtoPackageIsVersion3
 
-type PayloadType uint16
+type PayloadType uint8
 
 var (
 	PayloadTypeUnset       PayloadType = 0
@@ -21,36 +22,37 @@ var (
 )
 
 var (
-	PayloadTypeUserCreateFile      PayloadType = 100
-	PayloadTypeUserCreateDirectory PayloadType = 101
-	PayloadTypeUserUpdateFileName  PayloadType = 102
-	PayloadTypeUserUpdateFileData  PayloadType = 103
-	PayloadTypeUserUpdateFileKey   PayloadType = 104
-	PayloadTypeUserPublicKey       PayloadType = 105
+	PayloadTypeUserCreateFile      PayloadType = 10
+	PayloadTypeUserCreateDirectory PayloadType = 11
+	PayloadTypeUserUpdateFileName  PayloadType = 12
+	PayloadTypeUserUpdateFileData  PayloadType = 13
+	PayloadTypeUserUpdateFileKey   PayloadType = 14
+	PayloadTypeUserPublicKey       PayloadType = 15
 )
 
 var (
-	PayloadTypeGroupCreateFile      PayloadType = 200
-	PayloadTypeGroupCreateDirectory PayloadType = 201
-	PayloadTypeGroupUpdateFileName  PayloadType = 202
-	PayloadTypeGroupUpdateFileData  PayloadType = 203
-	PayloadTypeGroupUpdateFileKey   PayloadType = 204
-	PayloadTypeGroupPublicKey       PayloadType = 205
+	PayloadTypeGroupCreateFile      PayloadType = 20
+	PayloadTypeGroupCreateDirectory PayloadType = 21
+	PayloadTypeGroupUpdateFileName  PayloadType = 22
+	PayloadTypeGroupUpdateFileData  PayloadType = 23
+	PayloadTypeGroupUpdateFileKey   PayloadType = 24
+	PayloadTypeGroupPublicKey       PayloadType = 25
 )
 
 var (
-	PayloadTypeSeaStoreFile  PayloadType = 300
-	PayloadTypeSeaUpdateFile PayloadType = 301
+	PayloadTypeSeaStoreFile PayloadType = 30
 )
 
 type SeaStoragePayload struct {
-	Action   PayloadType
-	Name     string // default: ""
-	PWD      string // default: "/"
-	Target   string // default: ""
-	Target2  string // default: ""
-	Key      crypto.Key
-	FileInfo storage.FileInfo
+	Action    PayloadType
+	Name      string // default: ""
+	PWD       string // default: "/"
+	Target    string // default: ""
+	Target2   string // default: ""
+	Key       crypto.Key
+	FileInfo  storage.FileInfo
+	Hash      crypto.Hash
+	Signature user.OperationSignature
 }
 
 func NewSeaStoragePayload(action PayloadType, name string, pwd string, target string, target2 string, info storage.FileInfo) *SeaStoragePayload {
@@ -64,7 +66,7 @@ func NewSeaStoragePayload(action PayloadType, name string, pwd string, target st
 	}
 }
 
-func FromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {
+func PayloadFromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {
 	if payloadData == nil {
 		return nil, &processor.InvalidTransactionError{Msg: "Must contain payload"}
 	}
