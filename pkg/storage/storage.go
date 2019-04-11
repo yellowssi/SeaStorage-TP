@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/hex"
 	"errors"
-	"github.com/deckarep/golang-set"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"strings"
 )
@@ -18,7 +17,7 @@ type FileInfo struct {
 	Size      uint
 	Hash      crypto.Hash
 	Key       crypto.Key
-	Fragments mapset.Set // set of []*Fragment
+	Fragments []*Fragment
 }
 
 func NewRoot(home *Directory, keys map[crypto.Hash]*FileKey) *Root {
@@ -28,7 +27,7 @@ func NewRoot(home *Directory, keys map[crypto.Hash]*FileKey) *Root {
 	}
 }
 
-func NewFileInfo(name string, size uint, hash crypto.Hash, key crypto.Key, fragments mapset.Set) *FileInfo {
+func NewFileInfo(name string, size uint, hash crypto.Hash, key crypto.Key, fragments []*Fragment) *FileInfo {
 	return &FileInfo{
 		Name:      name,
 		Size:      size,

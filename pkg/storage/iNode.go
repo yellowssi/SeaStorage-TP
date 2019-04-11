@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"github.com/deckarep/golang-set"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ type File struct {
 	Size      uint
 	Hash      crypto.Hash
 	KeyIndex  crypto.Hash
-	Fragments mapset.Set // set of []*Fragment
+	Fragments []*Fragment
 }
 
 type Directory struct {
@@ -38,7 +37,7 @@ type Directory struct {
 
 type Fragment struct {
 	Hash crypto.Hash
-	Seas mapset.Set // set of []*FragmentSea
+	Seas []*FragmentSea
 }
 
 type FragmentSea struct {
@@ -57,7 +56,7 @@ func NewFileKey(key crypto.Key) *FileKey {
 	return &FileKey{Key: key, Used: 0}
 }
 
-func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments mapset.Set) *File {
+func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments []*Fragment) *File {
 	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments}
 }
 
@@ -65,7 +64,7 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name, Size: 0, Hash: "", INodes: make([]INode, 0)}
 }
 
-func NewFragment(hash crypto.Hash, seas mapset.Set) *Fragment {
+func NewFragment(hash crypto.Hash, seas []*FragmentSea) *Fragment {
 	return &Fragment{Hash: hash, Seas: seas}
 }
 
@@ -209,13 +208,6 @@ func (d *Directory) CreateDirectory(path string) (*Directory, error) {
 
 // Update directories' Size in the path recursively.
 func (d *Directory) updateDirectorySize(path string) {
-	if path == "/" {
-		d.Size = 0
-		for i := 0; i < len(d.INodes); i++ {
-			d.Size += d.INodes[i].GetSize()
-		}
-		return
-	}
 	pathParams := strings.Split(path, "/")
 	d.Size = 0
 	for i := 0; i < len(d.INodes); i++ {
@@ -227,7 +219,8 @@ func (d *Directory) updateDirectorySize(path string) {
 				d.INodes[i].(*Directory).updateDirectorySize(subPath)
 			}
 			d.Size += d.INodes[i].GetSize()
-		default:
+		case *File:
+			d.Size += d.INodes[i].GetSize()
 		}
 	}
 }
@@ -282,7 +275,7 @@ func (d *Directory) DeleteDirectory(path string, name string) (operations map[cr
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.Hash, keyHash crypto.Hash, fragments mapset.Set) error {
+func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.Hash, keyHash crypto.Hash, fragments []*Fragment) error {
 	dir, err := d.checkPathExists(path)
 	if err != nil {
 		return err
@@ -308,7 +301,7 @@ func (d *Directory) UpdateFileName(path string, name string, newName string) err
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(path string, name string, size uint, hash crypto.Hash, fragments mapset.Set) error {
+func (d *Directory) UpdateFileData(path string, name string, size uint, hash crypto.Hash, fragments []*Fragment) error {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return err
@@ -320,7 +313,7 @@ func (d *Directory) UpdateFileData(path string, name string, size uint, hash cry
 }
 
 // Update the Key of file
-func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments mapset.Set) (operations map[crypto.Hash]int, err error) {
+func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments []*Fragment) (operations map[crypto.Hash]int, err error) {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return operations, err
@@ -359,14 +352,14 @@ func (d Directory) AddSea(path string, name string, hash crypto.Hash, sea *Fragm
 	if err != nil {
 		return err
 	}
-	for _, fragment := range file.Fragments.ToSlice() {
-		if fragment.(*Fragment).Hash == hash {
-			for _, s := range fragment.(*Fragment).Seas.ToSlice() {
-				if s.(*FragmentSea).Address == sea.Address {
+	for _, fragment := range file.Fragments {
+		if fragment.Hash == hash {
+			for _, s := range fragment.Seas {
+				if s.Address == sea.Address {
 					return errors.New("fragment stored")
 				}
 			}
-			fragment.(*Fragment).Seas.Add(sea)
+			fragment.Seas = append(fragment.Seas, sea)
 			return nil
 		}
 	}
@@ -389,9 +382,10 @@ func (d *Directory) ToBytes() ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-func DirectoryFromBytes(data []byte) (d *Directory, err error) {
+func DirectoryFromBytes(data []byte) (*Directory, error) {
+	d := &Directory{}
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
-	err = dec.Decode(d)
-	return
+	err := dec.Decode(d)
+	return d, err
 }

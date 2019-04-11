@@ -18,11 +18,11 @@ func (h *SeaStorageHandler) FamilyName() string {
 	return h.Name
 }
 
-func (h *SeaStorageHandler) FamilyVersion() []string {
+func (h *SeaStorageHandler) FamilyVersions() []string {
 	return h.Version
 }
 
-func (h *SeaStorageHandler) FamilyNamespaces() []string {
+func (h *SeaStorageHandler) Namespaces() []string {
 	return []string{string(seaStorageState.Namespace)}
 }
 
