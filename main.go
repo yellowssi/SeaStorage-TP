@@ -1,21 +1,14 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/jessevdk/go-flags"
 	"gitlab.com/SeaStorage/SeaStorage/pkg/seaStorageHandler"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
 	"os"
 	"syscall"
 )
-
-func init() {
-	gob.Register(&storage.File{})
-	gob.Register(&storage.Directory{})
-}
 
 type Opts struct {
 	Verbose []bool `short:"v" long:"verbose" description:"Increase verbosity"`

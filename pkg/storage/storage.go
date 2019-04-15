@@ -1,11 +1,17 @@
 package storage
 
 import (
+	"encoding/gob"
 	"encoding/hex"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
 	"strings"
 )
+
+func init() {
+	gob.Register(&File{})
+	gob.Register(&Directory{})
+}
 
 type Root struct {
 	Home *Directory
