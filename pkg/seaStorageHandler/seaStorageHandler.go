@@ -2,6 +2,7 @@ package seaStorageHandler
 
 import (
 	"fmt"
+	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
@@ -9,9 +10,15 @@ import (
 	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStorageState"
 )
 
+var logger = logging.Get()
+
 type SeaStorageHandler struct {
 	Name    string
 	Version []string
+}
+
+func NewSeaStorageHandler(version []string) *SeaStorageHandler {
+	return &SeaStorageHandler{Name: "SeaStorage", Version: version}
 }
 
 func (h *SeaStorageHandler) FamilyName() string {
@@ -34,6 +41,9 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return err
 	}
 	state := seaStorageState.NewSeaStorageState(context)
+
+	logger.Debugf("SeaStorage txn %v: user %v: payload: Name='%v', Action='%v'", request.Signature, user, payload.Name, payload.Action)
+
 	switch payload.Action {
 	// Base Action
 	case seaStoragePayload.PayloadTypeCreateUser:

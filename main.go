@@ -33,7 +33,7 @@ func main() {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
 			os.Exit(0)
 		} else {
-			logger.Error("failed to parse args: %v", err)
+			logger.Error("Failed to parse args: %v", err)
 			os.Exit(2)
 		}
 	}
@@ -51,14 +51,14 @@ func main() {
 	case 1:
 		logger.SetLevel(logging.INFO)
 	default:
-		logger.SetLevel(logging.ERROR)
+		logger.SetLevel(logging.WARN)
 	}
 
 	logger.Debugf("command line arguments: %v\n", os.Args)
 	logger.Debugf("verbose = %v\n", len(opts.Verbose))
 	logger.Debugf("endpoint = %v\n", endpoint)
 
-	handler := &seaStorageHandler.SeaStorageHandler{}
+	handler := seaStorageHandler.NewSeaStorageHandler([]string{"1.0"})
 	proc := processor.NewTransactionProcessor(endpoint)
 	proc.AddHandler(handler)
 	proc.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
