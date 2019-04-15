@@ -18,8 +18,8 @@ func init() {
 }
 
 type Opts struct {
-	Verbose []bool
-	Connect string
+	Verbose []bool `short:"v" long:"verbose" description:"Increase verbosity"`
+	Connect string `short:"C" long:"connect" description:"Validator component endpoint to connect to" default:"tcp://localhost:4004"`
 }
 
 func main() {
