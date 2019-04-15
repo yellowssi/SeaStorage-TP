@@ -1,4 +1,4 @@
-module gitlab.com/SeaStorage/SeaStorage-Hyperledger
+module gitlab.com/SeaStorage/SeaStorage
 
 go 1.12
 
