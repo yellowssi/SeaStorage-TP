@@ -3,7 +3,7 @@ package storage
 import (
 	"encoding/hex"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
 	"strings"
 )
 

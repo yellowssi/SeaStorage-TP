@@ -3,7 +3,7 @@ package sea
 import (
 	"bytes"
 	"encoding/gob"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
 	"time"
 )
 

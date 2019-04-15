@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
 	"strings"
 	"time"
 )

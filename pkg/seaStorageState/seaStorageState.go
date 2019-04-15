@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/mitchellh/copystructure"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/sea"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/user"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/sea"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/user"
 	"time"
 )
 

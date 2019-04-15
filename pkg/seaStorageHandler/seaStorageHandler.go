@@ -5,9 +5,9 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStoragePayload"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/seaStorageState"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/seaStoragePayload"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/seaStorageState"
 )
 
 var logger = logging.Get()

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/gob"
 	"github.com/deckarep/golang-set"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-Hyperledger/pkg/storage"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
 	"time"
 )
 
