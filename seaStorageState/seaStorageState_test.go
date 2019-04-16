@@ -2,7 +2,7 @@ package seaStorageState
 
 import (
 	"github.com/mitchellh/copystructure"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
+	"gitlab.com/SeaStorage/SeaStorage/storage"
 	"testing"
 )
 

@@ -5,9 +5,9 @@ import (
 	"encoding/gob"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/user"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/storage"
+	"gitlab.com/SeaStorage/SeaStorage/user"
 )
 
 const _ = proto.ProtoPackageIsVersion3
@@ -24,7 +24,7 @@ var (
 var (
 	PayloadTypeUserCreateFile      PayloadType = 10
 	PayloadTypeUserCreateDirectory PayloadType = 11
-	PayloadTypeUserUpdateFileName  PayloadType = 12
+	PayloadTypeUserUpdateName      PayloadType = 12
 	PayloadTypeUserUpdateFileData  PayloadType = 13
 	PayloadTypeUserUpdateFileKey   PayloadType = 14
 	PayloadTypeUserPublicKey       PayloadType = 15
@@ -40,7 +40,8 @@ var (
 )
 
 var (
-	PayloadTypeSeaStoreFile PayloadType = 30
+	PayloadTypeSeaStoreFile  PayloadType = 30
+	PayloadTypeSeaDeleteFile PayloadType = 31
 )
 
 type SeaStoragePayload struct {

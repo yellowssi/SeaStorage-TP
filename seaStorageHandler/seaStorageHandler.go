@@ -5,9 +5,9 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/seaStoragePayload"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/seaStorageState"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/seaStoragePayload"
+	"gitlab.com/SeaStorage/SeaStorage/seaStorageState"
 )
 
 var logger = logging.Get()
@@ -58,8 +58,8 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return state.UserCreateDirectory(payload.Name, user, payload.PWD, payload.Target)
 	case seaStoragePayload.PayloadTypeUserCreateFile:
 		return state.UserCreateFile(payload.Name, user, payload.PWD, payload.FileInfo)
-	case seaStoragePayload.PayloadTypeUserUpdateFileName:
-		return state.UserUpdateFileName(payload.Name, user, payload.PWD, payload.Target, payload.Target2)
+	case seaStoragePayload.PayloadTypeUserUpdateName:
+		return state.UserUpdateName(payload.Name, user, payload.PWD, payload.Target, payload.Target2)
 	case seaStoragePayload.PayloadTypeUserUpdateFileData:
 		return state.UserUpdateFileData(payload.Name, user, payload.PWD, payload.FileInfo)
 	case seaStoragePayload.PayloadTypeUserUpdateFileKey:

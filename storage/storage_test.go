@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"testing"
 )
 

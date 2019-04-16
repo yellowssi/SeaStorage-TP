@@ -1,8 +1,8 @@
 package user
 
 import (
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/storage"
 )
 
 type Role uint8

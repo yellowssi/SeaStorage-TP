@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"strings"
 	"time"
 )
@@ -226,12 +226,17 @@ func (d *Directory) updateDirectorySize(path string) {
 }
 
 // Update the Name of directory finding by the path.
-func (d *Directory) UpdateDirectoryName(path string, name string) error {
-	dir, err := d.checkPathExists(path)
+func (d *Directory) UpdateName(path string, name string, newName string) error {
+	iNode, err := d.checkINodeExists(path, name)
 	if err != nil {
 		return err
 	}
-	dir.Name = name
+	switch iNode.(type) {
+	case *File:
+		iNode.(*File).Name = newName
+	case *Directory:
+		iNode.(*Directory).Name = newName
+	}
 	return nil
 }
 
@@ -287,16 +292,6 @@ func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.
 	}
 	dir.INodes = append(dir.INodes, NewFile(name, size, hash, keyHash, fragments))
 	d.updateDirectorySize(path)
-	return nil
-}
-
-// Update the filename finding by the path and the Name.
-func (d *Directory) UpdateFileName(path string, name string, newName string) error {
-	file, err := d.checkFileExists(path, name)
-	if err != nil {
-		return err
-	}
-	file.Name = newName
 	return nil
 }
 

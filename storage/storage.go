@@ -4,7 +4,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"strings"
 )
 
@@ -133,7 +133,7 @@ func (root *Root) CreateFile(path string, info FileInfo) error {
 	return root.Home.CreateFile(path, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
 }
 
-func (root *Root) UpdateFileName(path string, name string, newName string) error {
+func (root *Root) UpdateName(path string, name string, newName string) error {
 	err := validInfo(path, name)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func (root *Root) UpdateFileName(path string, name string, newName string) error
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileName(path, name, newName)
+	return root.Home.UpdateName(path, name, newName)
 }
 
 func (root *Root) UpdateFileData(path string, info FileInfo) error {

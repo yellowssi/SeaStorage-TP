@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/mitchellh/copystructure"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/crypto"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/sea"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/storage"
-	"gitlab.com/SeaStorage/SeaStorage/pkg/user"
+	"gitlab.com/SeaStorage/SeaStorage/crypto"
+	"gitlab.com/SeaStorage/SeaStorage/sea"
+	"gitlab.com/SeaStorage/SeaStorage/storage"
+	"gitlab.com/SeaStorage/SeaStorage/user"
 	"time"
 )
 
@@ -262,12 +262,12 @@ func (sss *SeaStorageState) UserCreateFile(username string, publicKey crypto.Add
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserUpdateFileName(username string, publicKey crypto.Address, path string, name string, newName string) error {
+func (sss *SeaStorageState) UserUpdateName(username string, publicKey crypto.Address, path string, name string, newName string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
 	}
-	err = u.Root.UpdateFileName(path, name, newName)
+	err = u.Root.UpdateName(path, name, newName)
 	if err != nil {
 		return err
 	}
