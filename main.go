@@ -5,7 +5,7 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/jessevdk/go-flags"
-	"gitlab.com/SeaStorage/SeaStorage/seaStorageHandler"
+	"gitlab.com/SeaStorage/SeaStorage/handler"
 	"os"
 	"syscall"
 )
@@ -51,7 +51,7 @@ func main() {
 	logger.Debugf("verbose = %v\n", len(opts.Verbose))
 	logger.Debugf("endpoint = %v\n", endpoint)
 
-	handler := seaStorageHandler.NewSeaStorageHandler([]string{"1.0"})
+	handler := handler.NewSeaStorageHandler([]string{"1.0"})
 	proc := processor.NewTransactionProcessor(endpoint)
 	proc.AddHandler(handler)
 	proc.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)

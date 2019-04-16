@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"testing"
 )
 
@@ -44,7 +43,7 @@ func TestValidPath(t *testing.T) {
 func TestGob(t *testing.T) {
 	root := NewDirectory("root")
 	_, _ = root.CreateDirectory("/test")
-	_ = root.CreateFile("/", "testFile", 10, crypto.Hash("test"), crypto.Hash("key"), make([]*Fragment, 0))
+	_ = root.CreateFile("/", "testFile", 10, "test", "key", make([]*Fragment, 0))
 	_, _ = root.CreateDirectory("/test/testDir")
 	t.Log(root)
 	data, err := root.ToBytes()

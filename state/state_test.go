@@ -1,4 +1,4 @@
-package seaStorageState
+package state
 
 import (
 	"github.com/mitchellh/copystructure"

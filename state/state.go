@@ -1,4 +1,4 @@
-package seaStorageState
+package state
 
 import (
 	"bytes"
@@ -26,31 +26,31 @@ var (
 )
 
 var (
-	Namespace       = crypto.SHA512([]byte("SeaStorage"))[:6]
-	UserNamespace   = crypto.Hash(AddressTypeUser)
-	GroupNamespace  = crypto.Hash(AddressTypeGroup)
-	SeaNamespace    = crypto.Hash(AddressTypeSea)
-	SharedNamespace = crypto.Hash(AddressTypeShared)
+	Namespace       = crypto.SHA512Hex("SeaStorage")[:6]
+	UserNamespace   = string(AddressTypeUser)
+	GroupNamespace  = string(AddressTypeGroup)
+	SeaNamespace    = string(AddressTypeSea)
+	SharedNamespace = string(AddressTypeSea)
 )
 
 type SeaStorageState struct {
 	context     *processor.Context
-	userCache   map[crypto.Address][]byte
-	groupCache  map[crypto.Address][]byte
-	seaCache    map[crypto.Address][]byte
-	sharedCache map[crypto.Address][]byte
+	userCache   map[string][]byte
+	groupCache  map[string][]byte
+	seaCache    map[string][]byte
+	sharedCache map[string][]byte
 }
 
 func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	return &SeaStorageState{
 		context:    context,
-		userCache:  make(map[crypto.Address][]byte),
-		groupCache: make(map[crypto.Address][]byte),
-		seaCache:   make(map[crypto.Address][]byte),
+		userCache:  make(map[string][]byte),
+		groupCache: make(map[string][]byte),
+		seaCache:   make(map[string][]byte),
 	}
 }
 
-func (sss *SeaStorageState) GetUser(username string, publicKey crypto.Address) (*user.User, error) {
+func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.User, error) {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	userBytes, ok := sss.userCache[address]
 	if ok {
@@ -67,7 +67,7 @@ func (sss *SeaStorageState) GetUser(username string, publicKey crypto.Address) (
 	return nil, errors.New("user doesn't exists")
 }
 
-func (sss *SeaStorageState) CreateUser(username string, publicKey crypto.Address) error {
+func (sss *SeaStorageState) CreateUser(username string, publicKey string) error {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	_, ok := sss.userCache[address]
 	if ok {
@@ -83,7 +83,7 @@ func (sss *SeaStorageState) CreateUser(username string, publicKey crypto.Address
 	return sss.saveUser(user.GenerateUser(), address)
 }
 
-func (sss *SeaStorageState) saveUser(u *user.User, address crypto.Address) error {
+func (sss *SeaStorageState) saveUser(u *user.User, address string) error {
 	uBytes, err := serialize(u)
 	if err != nil {
 		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize account: ", err)}
@@ -118,7 +118,7 @@ func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 	return nil, errors.New("group doesn't exists")
 }
 
-func (sss *SeaStorageState) CreateGroup(groupName string, leader crypto.Address, key crypto.Key) error {
+func (sss *SeaStorageState) CreateGroup(groupName string, leader string, key string) error {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
 	_, ok := sss.groupCache[address]
 	if ok {
@@ -134,7 +134,7 @@ func (sss *SeaStorageState) CreateGroup(groupName string, leader crypto.Address,
 	return sss.saveGroup(user.GenerateGroup(groupName, leader), address)
 }
 
-func (sss *SeaStorageState) saveGroup(g *user.Group, address crypto.Address) error {
+func (sss *SeaStorageState) saveGroup(g *user.Group, address string) error {
 	gBytes, err := serialize(g)
 	if err != nil {
 		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize group: ", err)}
@@ -152,7 +152,7 @@ func (sss *SeaStorageState) saveGroup(g *user.Group, address crypto.Address) err
 	return nil
 }
 
-func (sss *SeaStorageState) GetSea(seaName string, publicKey crypto.Address) (*sea.Sea, error) {
+func (sss *SeaStorageState) GetSea(seaName string, publicKey string) (*sea.Sea, error) {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	seaBytes, ok := sss.seaCache[address]
 	if ok {
@@ -169,7 +169,7 @@ func (sss *SeaStorageState) GetSea(seaName string, publicKey crypto.Address) (*s
 	return nil, errors.New("sea doesn't exists")
 }
 
-func (sss *SeaStorageState) CreateSea(seaName string, publicKey crypto.Address) error {
+func (sss *SeaStorageState) CreateSea(seaName string, publicKey string) error {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	_, ok := sss.seaCache[address]
 	if ok {
@@ -185,7 +185,7 @@ func (sss *SeaStorageState) CreateSea(seaName string, publicKey crypto.Address) 
 	return sss.saveSea(sea.NewSea(), address)
 }
 
-func (sss *SeaStorageState) saveSea(s *sea.Sea, address crypto.Address) error {
+func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
 	sBytes, err := serialize(s)
 	if err != nil {
 		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize sea: ", err)}
@@ -203,7 +203,7 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address crypto.Address) error {
 	return nil
 }
 
-func (sss *SeaStorageState) UserShareFile(username string, publicKey crypto.Address, path string, target string) error {
+func (sss *SeaStorageState) UserShareFile(username string, publicKey string, path string, target string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -220,7 +220,7 @@ func (sss *SeaStorageState) UserShareFile(username string, publicKey crypto.Addr
 	return sss.saveSharedFiles(dst.(storage.INode), address)
 }
 
-func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address crypto.Address) error {
+func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address string) error {
 	// TODO: Judge Shared Files Exists (Target / Update)
 	nBytes, err := serialize(node)
 	if err != nil {
@@ -236,7 +236,7 @@ func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address crypto.A
 	return nil
 }
 
-func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey crypto.Address, path string, name string) error {
+func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey string, path string, name string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -249,7 +249,7 @@ func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey crypt
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserCreateFile(username string, publicKey crypto.Address, path string, info storage.FileInfo) error {
+func (sss *SeaStorageState) UserCreateFile(username string, publicKey string, path string, info storage.FileInfo) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -262,7 +262,7 @@ func (sss *SeaStorageState) UserCreateFile(username string, publicKey crypto.Add
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserUpdateName(username string, publicKey crypto.Address, path string, name string, newName string) error {
+func (sss *SeaStorageState) UserUpdateName(username string, publicKey string, path string, name string, newName string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -275,7 +275,7 @@ func (sss *SeaStorageState) UserUpdateName(username string, publicKey crypto.Add
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserUpdateFileData(username string, publicKey crypto.Address, path string, info storage.FileInfo) error {
+func (sss *SeaStorageState) UserUpdateFileData(username string, publicKey string, path string, info storage.FileInfo) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func (sss *SeaStorageState) UserUpdateFileData(username string, publicKey crypto
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserUpdateFileKey(username string, publicKey crypto.Address, path string, info storage.FileInfo) error {
+func (sss *SeaStorageState) UserUpdateFileKey(username string, publicKey string, path string, info storage.FileInfo) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -301,7 +301,7 @@ func (sss *SeaStorageState) UserUpdateFileKey(username string, publicKey crypto.
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) UserPublicKey(username string, publicKey crypto.Address, key crypto.Key) error {
+func (sss *SeaStorageState) UserPublicKey(username string, publicKey string, key string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
@@ -314,7 +314,7 @@ func (sss *SeaStorageState) UserPublicKey(username string, publicKey crypto.Addr
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey crypto.Address, hash crypto.Hash, sign user.OperationSignature) error {
+func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey string, hash string, sign user.OperationSignature) error {
 	s, err := sss.GetSea(seaName, publicKey)
 	if err != nil {
 		return err
@@ -363,17 +363,17 @@ func deserializeSea(data []byte) (sea *sea.Sea, err error) {
 	return sea, err
 }
 
-func MakeAddress(addressType AddressType, name string, publicKey crypto.Address) crypto.Address {
+func MakeAddress(addressType AddressType, name string, publicKey string) string {
 	switch addressType {
 	case AddressTypeUser:
-		return crypto.Address(Namespace + UserNamespace + crypto.SHA512(bytes.Join([][]byte{[]byte(name), publicKey.ToBytes()}, []byte{}))[:63])
+		return Namespace + UserNamespace + crypto.SHA512Hex(name + publicKey)[:63]
 	case AddressTypeGroup:
-		return crypto.Address(Namespace + GroupNamespace + crypto.SHA512([]byte(name))[:63])
+		return Namespace + GroupNamespace + crypto.SHA512Hex(name)[:63]
 	case AddressTypeSea:
-		return crypto.Address(Namespace + SeaNamespace + crypto.SHA512(bytes.Join([][]byte{[]byte(name), publicKey.ToBytes()}, []byte{}))[:63])
+		return Namespace + SeaNamespace + crypto.SHA512Hex(name + publicKey)[:63]
 	case AddressTypeShared:
-		return crypto.Address(Namespace + SharedNamespace + crypto.SHA512(bytes.Join([][]byte{[]byte(name), publicKey.ToBytes()}, []byte{}))[:63])
+		return Namespace + SharedNamespace + crypto.SHA512Hex(name + publicKey)[:63]
 	default:
-		return crypto.Address("")
+		return string("")
 	}
 }

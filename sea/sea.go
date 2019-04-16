@@ -3,7 +3,6 @@ package sea
 import (
 	"bytes"
 	"encoding/gob"
-	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"time"
 )
 
@@ -15,8 +14,8 @@ var (
 
 type Operation struct {
 	Action int8
-	Owner  crypto.Address
-	Hash   crypto.Hash
+	Owner  string
+	Hash   string
 	Shared bool
 }
 
@@ -39,7 +38,7 @@ type Status struct {
 	BasePath   string
 }
 
-func NewOperation(action int8, owner crypto.Address, hash crypto.Hash, shared bool) *Operation {
+func NewOperation(action int8, owner string, hash string, shared bool) *Operation {
 	return &Operation{
 		Action: action,
 		Owner:  owner,

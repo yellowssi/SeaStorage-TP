@@ -4,44 +4,43 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"strings"
 	"time"
 )
 
 type FileKey struct {
 	Used uint
-	Key  crypto.Key
+	Key  string
 }
 
 type INode interface {
 	GetName() string
 	GetSize() uint
-	GetHash() crypto.Hash
+	GetHash() string
 }
 
 type File struct {
 	Name      string
 	Size      uint
-	Hash      crypto.Hash
-	KeyIndex  crypto.Hash
+	Hash      string
+	KeyIndex  string
 	Fragments []*Fragment
 }
 
 type Directory struct {
 	Name   string
 	Size   uint
-	Hash   crypto.Hash
+	Hash   string
 	INodes []INode
 }
 
 type Fragment struct {
-	Hash crypto.Hash
+	Hash string
 	Seas []*FragmentSea
 }
 
 type FragmentSea struct {
-	Address   crypto.Address
+	PublicKey string
 	Weight    int8
 	Timestamp time.Time
 }
@@ -52,11 +51,11 @@ type INodeInfo struct {
 	Size  uint
 }
 
-func NewFileKey(key crypto.Key) *FileKey {
+func NewFileKey(key string) *FileKey {
 	return &FileKey{Key: key, Used: 0}
 }
 
-func NewFile(name string, size uint, hash crypto.Hash, key crypto.Hash, fragments []*Fragment) *File {
+func NewFile(name string, size uint, hash string, key string, fragments []*Fragment) *File {
 	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments}
 }
 
@@ -64,12 +63,12 @@ func NewDirectory(name string) *Directory {
 	return &Directory{Name: name, Size: 0, Hash: "", INodes: make([]INode, 0)}
 }
 
-func NewFragment(hash crypto.Hash, seas []*FragmentSea) *Fragment {
+func NewFragment(hash string, seas []*FragmentSea) *Fragment {
 	return &Fragment{Hash: hash, Seas: seas}
 }
 
-func NewFragmentSea(address crypto.Address) *FragmentSea {
-	return &FragmentSea{Address: address, Weight: 0}
+func NewFragmentSea(publicKey string) *FragmentSea {
+	return &FragmentSea{PublicKey: publicKey, Weight: 0}
 }
 
 func (f *File) GetName() string {
@@ -80,7 +79,7 @@ func (f *File) GetSize() uint {
 	return f.Size
 }
 
-func (f *File) GetHash() crypto.Hash {
+func (f *File) GetHash() string {
 	return f.Hash
 }
 
@@ -92,7 +91,7 @@ func (d *Directory) GetSize() uint {
 	return d.Size
 }
 
-func (d *Directory) GetHash() crypto.Hash {
+func (d *Directory) GetHash() string {
 	return d.Hash
 }
 
@@ -241,8 +240,8 @@ func (d *Directory) UpdateName(path string, name string, newName string) error {
 }
 
 // Delete directory Key.
-func (d *Directory) DeleteDirectoryKey() map[crypto.Hash]uint {
-	operations := make(map[crypto.Hash]uint)
+func (d *Directory) DeleteDirectoryKey() map[string]uint {
+	operations := make(map[string]uint)
 	for _, iNode := range d.INodes {
 		switch iNode.(type) {
 		case *Directory:
@@ -259,7 +258,7 @@ func (d *Directory) DeleteDirectoryKey() map[crypto.Hash]uint {
 }
 
 // Delete iNode of the directory finding by the path.
-func (d *Directory) DeleteDirectory(path string, name string) (operations map[crypto.Hash]uint, err error) {
+func (d *Directory) DeleteDirectory(path string, name string) (operations map[string]uint, err error) {
 	dir, err := d.checkPathExists(path)
 	if err != nil {
 		return nil, err
@@ -280,7 +279,7 @@ func (d *Directory) DeleteDirectory(path string, name string) (operations map[cr
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.Hash, keyHash crypto.Hash, fragments []*Fragment) error {
+func (d *Directory) CreateFile(path string, name string, size uint, hash string, keyHash string, fragments []*Fragment) error {
 	dir, err := d.checkPathExists(path)
 	if err != nil {
 		return err
@@ -296,7 +295,7 @@ func (d *Directory) CreateFile(path string, name string, size uint, hash crypto.
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(path string, name string, size uint, hash crypto.Hash, fragments []*Fragment) error {
+func (d *Directory) UpdateFileData(path string, name string, size uint, hash string, fragments []*Fragment) error {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return err
@@ -308,7 +307,7 @@ func (d *Directory) UpdateFileData(path string, name string, size uint, hash cry
 }
 
 // Update the Key of file
-func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash, hash crypto.Hash, fragments []*Fragment) (operations map[crypto.Hash]int, err error) {
+func (d *Directory) UpdateFileKey(path string, name string, keyHash string, hash string, fragments []*Fragment) (operations map[string]int, err error) {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return operations, err
@@ -322,7 +321,7 @@ func (d *Directory) UpdateFileKey(path string, name string, keyHash crypto.Hash,
 }
 
 // Delete the file finding by the Name under the path.
-func (d *Directory) DeleteFile(path string, name string) (crypto.Hash, error) {
+func (d *Directory) DeleteFile(path string, name string) (string, error) {
 	dir, err := d.checkPathExists(path)
 	if err != nil {
 		return "", err
@@ -342,7 +341,7 @@ func (d *Directory) DeleteFile(path string, name string) (crypto.Hash, error) {
 	return "", errors.New("File doesn't exists: " + path + name)
 }
 
-func (d Directory) AddSea(path string, name string, hash crypto.Hash, sea *FragmentSea) error {
+func (d Directory) AddSea(path string, name string, hash string, sea *FragmentSea) error {
 	file, err := d.checkFileExists(path, name)
 	if err != nil {
 		return err
@@ -350,7 +349,7 @@ func (d Directory) AddSea(path string, name string, hash crypto.Hash, sea *Fragm
 	for _, fragment := range file.Fragments {
 		if fragment.Hash == hash {
 			for _, s := range fragment.Seas {
-				if s.Address == sea.Address {
+				if s.PublicKey == sea.PublicKey {
 					return errors.New("fragment stored")
 				}
 			}

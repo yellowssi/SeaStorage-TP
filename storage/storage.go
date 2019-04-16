@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/gob"
-	"encoding/hex"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"strings"
@@ -15,25 +14,25 @@ func init() {
 
 type Root struct {
 	Home *Directory
-	Keys map[crypto.Hash]*FileKey
+	Keys map[string]*FileKey
 }
 
 type FileInfo struct {
 	Name      string
 	Size      uint
-	Hash      crypto.Hash
-	Key       crypto.Key
+	Hash      string
+	Key       string
 	Fragments []*Fragment
 }
 
-func NewRoot(home *Directory, keys map[crypto.Hash]*FileKey) *Root {
+func NewRoot(home *Directory, keys map[string]*FileKey) *Root {
 	return &Root{
 		Home: home,
 		Keys: keys,
 	}
 }
 
-func NewFileInfo(name string, size uint, hash crypto.Hash, key crypto.Key, fragments []*Fragment) *FileInfo {
+func NewFileInfo(name string, size uint, hash string, key string, fragments []*Fragment) *FileInfo {
 	return &FileInfo{
 		Name:      name,
 		Size:      size,
@@ -44,7 +43,7 @@ func NewFileInfo(name string, size uint, hash crypto.Hash, key crypto.Key, fragm
 }
 
 func GenerateRoot() *Root {
-	return NewRoot(NewDirectory("home"), make(map[crypto.Hash]*FileKey))
+	return NewRoot(NewDirectory("home"), make(map[string]*FileKey))
 }
 
 // Check the path whether valid.
@@ -91,27 +90,26 @@ func validInfo(path string, name string) error {
 	return nil
 }
 
-func (root *Root) SearchKey(key crypto.Key, generate bool, creation bool) crypto.Hash {
-	keyBytes, _ := hex.DecodeString(string(key))
-	keyIndex := crypto.SHA512(keyBytes)
-	fileKey, ok := root.Keys[crypto.Hash(keyIndex)]
+func (root *Root) SearchKey(key string, generate bool, creation bool) string {
+	keyIndex := crypto.SHA512Hex(key)
+	fileKey, ok := root.Keys[string(keyIndex)]
 	if ok {
 		if creation {
 			fileKey.Used++
 		}
-		return crypto.Hash(keyIndex)
+		return string(keyIndex)
 	} else if generate {
 		fileKey = NewFileKey(key)
 		if creation {
 			fileKey.Used++
 		}
-		root.Keys[crypto.Hash(keyIndex)] = fileKey
-		return crypto.Hash(keyIndex)
+		root.Keys[string(keyIndex)] = fileKey
+		return string(keyIndex)
 	}
 	return ""
 }
 
-func (root *Root) updateKeyUsed(keyUsed map[crypto.Hash]int) {
+func (root *Root) updateKeyUsed(keyUsed map[string]int) {
 	for k, v := range keyUsed {
 		if v < 0 {
 			root.Keys[k].Used -= uint(-v)
@@ -159,7 +157,7 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 		return err
 	}
 	_ = root.SearchKey(info.Key, true, false)
-	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512([]byte(info.Key)), info.Hash, info.Fragments)
+	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512Hex(info.Key), info.Hash, info.Fragments)
 	if err != nil {
 		return err
 	}
@@ -167,15 +165,12 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 	return nil
 }
 
-func (root *Root) PublicKey(address crypto.Address, key crypto.Key) error {
-	keyBytes, err := address.Encryption(key.ToBytes())
-	if err != nil {
-		return err
-	}
-	keyIndex := crypto.SHA512(keyBytes)
+func (root *Root) PublicKey(publicKey string, key string) error {
+	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
+	keyIndex := crypto.SHA512Hex(crypto.BytesToHex(keyBytes))
 	target, ok := root.Keys[keyIndex]
 	if ok {
-		if target.Key.Verify(address, key) {
+		if crypto.AESKeyVerify(publicKey, key, target.Key) {
 			target.Key = key
 			return nil
 		}
@@ -261,6 +256,6 @@ func (root *Root) GetINode(path string, name string) (INode, error) {
 	return root.Home.checkINodeExists(path, name)
 }
 
-func (root *Root) AddSea(path string, name string, hash crypto.Hash, sea *FragmentSea) error {
+func (root *Root) AddSea(path string, name string, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(path, name, hash, sea)
 }
