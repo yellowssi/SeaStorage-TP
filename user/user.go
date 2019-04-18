@@ -50,10 +50,7 @@ func NewOperation(owner string, publicKey string, path string, name string, time
 }
 
 func NewOperationSignature(operation Operation, privateKey string) (*OperationSignature, error) {
-	operationBytes, err := operation.ToBytes()
-	if err != nil {
-		return nil, err
-	}
+	operationBytes := operation.ToBytes()
 	signature, err := crypto.Sign(privateKey, crypto.BytesToHex(operationBytes))
 	if err != nil {
 		return nil, err
@@ -82,25 +79,17 @@ func (u *User) IsInGroup(group string) bool {
 	return u.Groups.Contains(group)
 }
 
-func (o Operation) ToBytes() ([]byte, error) {
+func (o Operation) ToBytes() []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(o)
-	return buf.Bytes(), err
+	_ = enc.Encode(o)
+	return buf.Bytes()
 }
 
-func (o Operation) ToHex() (string, error) {
-	data, err := o.ToBytes()
-	if err != nil {
-		return "", err
-	}
-	return crypto.BytesToHex(data), nil
+func (o Operation) ToHex() string {
+	return crypto.BytesToHex(o.ToBytes())
 }
 
 func (ops OperationSignature) Verify() bool {
-	operationHex, err := ops.Operation.ToHex()
-	if err != nil {
-		return false
-	}
-	return crypto.Verify(ops.Operation.PublicKey, ops.Signature, operationHex)
+	return crypto.Verify(ops.Operation.PublicKey, ops.Signature, ops.Operation.ToHex())
 }

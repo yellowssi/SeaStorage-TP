@@ -81,9 +81,9 @@ func SeaStoragePayloadFromBytes(payloadData []byte) (payload *SeaStoragePayload,
 	return payload, err
 }
 
-func (ssp *SeaStoragePayload) ToBytes() (data []byte, err error) {
-	buf := bytes.NewBuffer(data)
-	enc := gob.NewEncoder(buf)
-	err = enc.Encode(ssp)
-	return data, err
+func (ssp *SeaStoragePayload) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(ssp)
+	return buf.Bytes()
 }

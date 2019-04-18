@@ -369,11 +369,11 @@ func (d *Directory) List(path string) ([]INodeInfo, error) {
 	return generateINodeInfos(dir.INodes), nil
 }
 
-func (d *Directory) ToBytes() ([]byte, error) {
+func (d *Directory) ToBytes() []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(d)
-	return buf.Bytes(), err
+	_ = enc.Encode(d)
+	return buf.Bytes()
 }
 
 func DirectoryFromBytes(data []byte) (*Directory, error) {

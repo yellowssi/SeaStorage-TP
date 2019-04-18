@@ -62,11 +62,11 @@ func NewFragment(shared bool, data []byte) *Fragment {
 	}
 }
 
-func (f Fragment) ToBytes() (data []byte, err error) {
+func (f Fragment) ToBytes() []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	err = enc.Encode(f)
-	return buf.Bytes(), err
+	_ = enc.Encode(f)
+	return buf.Bytes()
 }
 
 func FragmentFromBytes(data []byte) (fragment Fragment, err error) {

@@ -46,10 +46,7 @@ func TestGob(t *testing.T) {
 	_ = root.CreateFile("/", "testFile", 10, "test", "key", make([]*Fragment, 0))
 	_, _ = root.CreateDirectory("/test/testDir")
 	t.Log(root)
-	data, err := root.ToBytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	data := root.ToBytes()
 	test, err := DirectoryFromBytes(data)
 	if err != nil {
 		t.Fatal(err)
