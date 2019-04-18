@@ -35,7 +35,7 @@ func (h *SeaStorageHandler) Namespaces() []string {
 func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
 	header := request.GetHeader()
 	user := header.GetSignerPublicKey()
-	pl, err := payload.PayloadFromBytes(request.GetPayload())
+	pl, err := payload.SeaStoragePayloadFromBytes(request.GetPayload())
 	if err != nil {
 		return err
 	}
@@ -45,39 +45,39 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	switch pl.Action {
 	// Base Action
-	case payload.PayloadTypeCreateUser:
+	case payload.CreateUser:
 		return st.CreateUser(pl.Target, user)
-	case payload.PayloadTypeCreateGroup:
+	case payload.CreateGroup:
 		return st.CreateGroup(pl.Target, state.MakeAddress(state.AddressTypeUser, pl.Name, user), pl.Key)
-	case payload.PayloadTypeCreateSea:
+	case payload.CreateSea:
 		return st.CreateSea(pl.Target, user)
 
 	// User Action
-	case payload.PayloadTypeUserCreateDirectory:
+	case payload.UserCreateDirectory:
 		return st.UserCreateDirectory(pl.Name, user, pl.PWD, pl.Target)
-	case payload.PayloadTypeUserCreateFile:
+	case payload.UserCreateFile:
 		return st.UserCreateFile(pl.Name, user, pl.PWD, pl.FileInfo)
-	case payload.PayloadTypeUserUpdateName:
+	case payload.UserUpdateName:
 		return st.UserUpdateName(pl.Name, user, pl.PWD, pl.Target, pl.Target2)
-	case payload.PayloadTypeUserUpdateFileData:
+	case payload.UserUpdateFileData:
 		return st.UserUpdateFileData(pl.Name, user, pl.PWD, pl.FileInfo)
-	case payload.PayloadTypeUserUpdateFileKey:
+	case payload.UserUpdateFileKey:
 		return st.UserUpdateFileKey(pl.Name, user, pl.PWD, pl.FileInfo)
-	case payload.PayloadTypeUserPublicKey:
+	case payload.UserPublicKey:
 		return st.UserPublicKey(pl.Name, user, pl.Key)
 	// TODO: User Join Group & Search Group
 
 	// Group Action
-	//case payload.PayloadTypeGroupCreateDirectory:
-	//case payload.PayloadTypeGroupCreateFile:
-	//case payload.PayloadTypeGroupUpdateFileName:
-	//case payload.PayloadTypeGroupUpdateFileData:
-	//case payload.PayloadTypeGroupUpdateFileKey:
-	//case payload.PayloadTypeGroupPublicKey:
+	//case payload.GroupCreateDirectory:
+	//case payload.GroupCreateFile:
+	//case payload.GroupUpdateFileName:
+	//case payload.GroupUpdateFileData:
+	//case payload.GroupUpdateFileKey:
+	//case payload.GroupPublicKey:
 	// TODO: Invite User & Access User Join Group & Leave Member
 
 	// Sea Action
-	case payload.PayloadTypeSeaStoreFile:
+	case payload.SeaStoreFile:
 		return st.SeaStoreFile(pl.Name, user, pl.Hash, pl.Signature)
 
 	default:

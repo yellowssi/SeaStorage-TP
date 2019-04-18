@@ -11,51 +11,53 @@ import (
 
 const _ = proto.ProtoPackageIsVersion3
 
-type PayloadType uint8
-
+// Common action
 var (
-	PayloadTypeUnset       PayloadType = 0
-	PayloadTypeCreateUser  PayloadType = 1
-	PayloadTypeCreateGroup PayloadType = 2
-	PayloadTypeCreateSea   PayloadType = 3
+	Unset       uint = 0
+	CreateUser  uint = 1
+	CreateGroup uint = 2
+	CreateSea   uint = 3
 )
 
+// User action
 var (
-	PayloadTypeUserCreateFile      PayloadType = 10
-	PayloadTypeUserCreateDirectory PayloadType = 11
-	PayloadTypeUserUpdateName      PayloadType = 12
-	PayloadTypeUserUpdateFileData  PayloadType = 13
-	PayloadTypeUserUpdateFileKey   PayloadType = 14
-	PayloadTypeUserPublicKey       PayloadType = 15
+	UserCreateFile      uint = 10
+	UserCreateDirectory uint = 11
+	UserUpdateName      uint = 12
+	UserUpdateFileData  uint = 13
+	UserUpdateFileKey   uint = 14
+	UserPublicKey       uint = 15
 )
 
+// Group action
 var (
-	PayloadTypeGroupCreateFile      PayloadType = 20
-	PayloadTypeGroupCreateDirectory PayloadType = 21
-	PayloadTypeGroupUpdateFileName  PayloadType = 22
-	PayloadTypeGroupUpdateFileData  PayloadType = 23
-	PayloadTypeGroupUpdateFileKey   PayloadType = 24
-	PayloadTypeGroupPublicKey       PayloadType = 25
+	GroupCreateFile      uint = 20
+	GroupCreateDirectory uint = 21
+	GroupUpdateFileName  uint = 22
+	GroupUpdateFileData  uint = 23
+	GroupUpdateFileKey   uint = 24
+	GroupPublicKey       uint = 25
 )
 
+// Sea Action
 var (
-	PayloadTypeSeaStoreFile  PayloadType = 30
-	PayloadTypeSeaDeleteFile PayloadType = 31
+	SeaStoreFile  uint = 30
+	SeaDeleteFile uint = 31
 )
 
 type SeaStoragePayload struct {
-	Action    PayloadType
-	Name      string // default: ""
-	PWD       string // default: "/"
-	Target    string // default: ""
-	Target2   string // default: ""
-	Key       string
-	FileInfo  storage.FileInfo
-	Hash      string
-	Signature user.OperationSignature
+	Action    uint                    `default:"Unset(0)"`
+	Name      string                  `default:""`
+	PWD       string                  `default:"/"`
+	Target    string                  `default:""`
+	Target2   string                  `default:""`
+	Key       string                  `default:""`
+	FileInfo  storage.FileInfo        `default:"FileInfo{}"`
+	Hash      string                  `default:""`
+	Signature user.OperationSignature `default:"OperationSignature{}"`
 }
 
-func NewSeaStoragePayload(action PayloadType, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, signature user.OperationSignature) *SeaStoragePayload {
+func NewSeaStoragePayload(action uint, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, signature user.OperationSignature) *SeaStoragePayload {
 	return &SeaStoragePayload{
 		Action:    action,
 		Name:      name,
@@ -69,7 +71,7 @@ func NewSeaStoragePayload(action PayloadType, name string, PWD string, target st
 	}
 }
 
-func PayloadFromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {
+func SeaStoragePayloadFromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {
 	if payloadData == nil {
 		return nil, &processor.InvalidTransactionError{Msg: "Must contain payload"}
 	}
