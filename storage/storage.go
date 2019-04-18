@@ -91,7 +91,7 @@ func validInfo(path string, name string) error {
 }
 
 func (root *Root) SearchKey(key string, generate bool, creation bool) string {
-	keyIndex := crypto.SHA512Hex(key)
+	keyIndex := crypto.SHA512HexFromHex(key)
 	fileKey, ok := root.Keys[string(keyIndex)]
 	if ok {
 		if creation {
@@ -157,7 +157,7 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 		return err
 	}
 	_ = root.SearchKey(info.Key, true, false)
-	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512Hex(info.Key), info.Hash, info.Fragments)
+	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512HexFromHex(info.Key), info.Hash, info.Fragments)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 
 func (root *Root) PublicKey(publicKey string, key string) error {
 	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
-	keyIndex := crypto.SHA512Hex(crypto.BytesToHex(keyBytes))
+	keyIndex := crypto.SHA512HexFromHex(crypto.BytesToHex(keyBytes))
 	target, ok := root.Keys[keyIndex]
 	if ok {
 		if crypto.AESKeyVerify(publicKey, key, target.Key) {

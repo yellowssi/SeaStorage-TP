@@ -26,7 +26,7 @@ var (
 )
 
 var (
-	Namespace       = crypto.SHA512Hex("SeaStorage")[:6]
+	Namespace       = crypto.SHA512HexFromHex("SeaStorage")[:6]
 	UserNamespace   = string(AddressTypeUser)
 	GroupNamespace  = string(AddressTypeGroup)
 	SeaNamespace    = string(AddressTypeSea)
@@ -366,13 +366,13 @@ func deserializeSea(data []byte) (sea *sea.Sea, err error) {
 func MakeAddress(addressType AddressType, name string, publicKey string) string {
 	switch addressType {
 	case AddressTypeUser:
-		return Namespace + UserNamespace + crypto.SHA512Hex(name + publicKey)[:63]
+		return Namespace + UserNamespace + crypto.SHA512HexFromHex(name + publicKey)[:63]
 	case AddressTypeGroup:
-		return Namespace + GroupNamespace + crypto.SHA512Hex(name)[:63]
+		return Namespace + GroupNamespace + crypto.SHA512HexFromHex(name)[:63]
 	case AddressTypeSea:
-		return Namespace + SeaNamespace + crypto.SHA512Hex(name + publicKey)[:63]
+		return Namespace + SeaNamespace + crypto.SHA512HexFromHex(name + publicKey)[:63]
 	case AddressTypeShared:
-		return Namespace + SharedNamespace + crypto.SHA512Hex(name + publicKey)[:63]
+		return Namespace + SharedNamespace + crypto.SHA512HexFromHex(name + publicKey)[:63]
 	default:
 		return string("")
 	}

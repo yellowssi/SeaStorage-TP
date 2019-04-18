@@ -5,7 +5,7 @@ import (
 )
 
 func TestSHA512(t *testing.T) {
-	hash := SHA512Hex("SeaStorage")
+	hash := SHA512HexFromHex("SeaStorage")
 	println(hash)
 	println(hash[:64])
 }
