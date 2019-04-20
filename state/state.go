@@ -2,9 +2,7 @@ package state
 
 import (
 	"bytes"
-	"encoding/gob"
 	"errors"
-	"fmt"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/mitchellh/copystructure"
 	"gitlab.com/SeaStorage/SeaStorage/crypto"
@@ -54,7 +52,7 @@ func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.Us
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	userBytes, ok := sss.userCache[address]
 	if ok {
-		return deserializeUser(userBytes)
+		return user.UserFromBytes(userBytes)
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
@@ -62,7 +60,7 @@ func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.Us
 	}
 	if len(results[address]) > 0 {
 		sss.userCache[address] = results[address]
-		return deserializeUser(results[address])
+		return user.UserFromBytes(results[address])
 	}
 	return nil, errors.New("user doesn't exists")
 }
@@ -84,10 +82,7 @@ func (sss *SeaStorageState) CreateUser(username string, publicKey string) error 
 }
 
 func (sss *SeaStorageState) saveUser(u *user.User, address string) error {
-	uBytes, err := serialize(u)
-	if err != nil {
-		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize account: ", err)}
-	}
+	uBytes := u.ToBytes()
 	addresses, err := sss.context.SetState(map[string][]byte{
 		address: uBytes,
 	})
@@ -105,7 +100,7 @@ func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
 	groupBytes, ok := sss.groupCache[address]
 	if ok {
-		return deserializeGroup(groupBytes)
+		return user.GroupFromBytes(groupBytes)
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
@@ -113,7 +108,7 @@ func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 	}
 	if len(results[address]) > 0 {
 		sss.seaCache[address] = results[address]
-		return deserializeGroup(results[address])
+		return user.GroupFromBytes(results[address])
 	}
 	return nil, errors.New("group doesn't exists")
 }
@@ -135,10 +130,7 @@ func (sss *SeaStorageState) CreateGroup(groupName string, leader string, key str
 }
 
 func (sss *SeaStorageState) saveGroup(g *user.Group, address string) error {
-	gBytes, err := serialize(g)
-	if err != nil {
-		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize group: ", err)}
-	}
+	gBytes := g.ToBytes()
 	addresses, err := sss.context.SetState(map[string][]byte{
 		address: gBytes,
 	})
@@ -156,7 +148,7 @@ func (sss *SeaStorageState) GetSea(seaName string, publicKey string) (*sea.Sea, 
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	seaBytes, ok := sss.seaCache[address]
 	if ok {
-		return deserializeSea(seaBytes)
+		return sea.SeaFromBytes(seaBytes)
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
@@ -164,7 +156,7 @@ func (sss *SeaStorageState) GetSea(seaName string, publicKey string) (*sea.Sea, 
 	}
 	if len(results[address]) > 0 {
 		sss.seaCache[address] = results[address]
-		return deserializeSea(results[address])
+		return sea.SeaFromBytes(results[address])
 	}
 	return nil, errors.New("sea doesn't exists")
 }
@@ -186,10 +178,7 @@ func (sss *SeaStorageState) CreateSea(seaName string, publicKey string) error {
 }
 
 func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
-	sBytes, err := serialize(s)
-	if err != nil {
-		return &processor.InternalError{Msg: fmt.Sprint("Failed to serialize sea: ", err)}
-	}
+	sBytes := s.ToBytes()
 	addresses, err := sss.context.SetState(map[string][]byte{
 		address: sBytes,
 	})
@@ -222,13 +211,13 @@ func (sss *SeaStorageState) UserShareFile(username string, publicKey string, pat
 
 func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address string) error {
 	// TODO: Judge Shared Files Exists (Target / Update)
-	nBytes, err := serialize(node)
-	if err != nil {
-		return err
-	}
+	nBytes := node.ToBytes()
 	addresses, err := sss.context.SetState(map[string][]byte{
 		address: nBytes,
 	})
+	if err != nil {
+		return err
+	}
 	if len(addresses) == 0 {
 		return &processor.InternalError{Msg: "No addresses in set response. "}
 	}
@@ -333,34 +322,6 @@ func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey string, hash 
 	s.Handles++
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	return sss.saveSea(s, address)
-}
-
-func serialize(i interface{}) (data []byte, err error) {
-	buf := bytes.NewBuffer(data)
-	enc := gob.NewEncoder(buf)
-	err = enc.Encode(i)
-	return buf.Bytes(), err
-}
-
-func deserializeUser(data []byte) (user *user.User, err error) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err = dec.Decode(user)
-	return user, err
-}
-
-func deserializeGroup(data []byte) (group *user.Group, err error) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err = dec.Decode(group)
-	return group, err
-}
-
-func deserializeSea(data []byte) (sea *sea.Sea, err error) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err = dec.Decode(sea)
-	return sea, err
 }
 
 func MakeAddress(addressType AddressType, name string, publicKey string) string {

@@ -54,6 +54,21 @@ func NewSea() *Sea {
 	}
 }
 
+func (s *Sea) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(s)
+	return buf.Bytes()
+}
+
+func SeaFromBytes(data []byte) (*Sea, error) {
+	s := &Sea{}
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(s)
+	return s, err
+}
+
 func NewFragment(shared bool, data []byte) *Fragment {
 	return &Fragment{
 		Timestamp: time.Now(),

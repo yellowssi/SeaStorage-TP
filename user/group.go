@@ -1,6 +1,8 @@
 package user
 
 import (
+	"bytes"
+	"encoding/gob"
 	"gitlab.com/SeaStorage/SeaStorage/storage"
 )
 
@@ -59,4 +61,19 @@ func (g *Group) RemoveMember(user string, member string) bool {
 	}
 	delete(g.Members, member)
 	return true
+}
+
+func (g *Group) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(g)
+	return buf.Bytes()
+}
+
+func GroupFromBytes(data []byte) (*Group, error) {
+	g := &Group{}
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(g)
+	return g, err
 }

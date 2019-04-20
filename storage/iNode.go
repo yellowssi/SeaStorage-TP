@@ -17,6 +17,7 @@ type INode interface {
 	GetName() string
 	GetSize() uint
 	GetHash() string
+	ToBytes() []byte
 }
 
 type File struct {
@@ -382,4 +383,19 @@ func DirectoryFromBytes(data []byte) (*Directory, error) {
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(d)
 	return d, err
+}
+
+func (f *File) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(f)
+	return buf.Bytes()
+}
+
+func FileFromBytes(data []byte) (*File, error) {
+	f := &File{}
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(f)
+	return f, err
 }

@@ -35,8 +35,7 @@ func NewUser(groups mapset.Set, root *storage.Root) *User {
 }
 
 func GenerateUser() *User {
-	var group mapset.Set
-	return NewUser(group, storage.GenerateRoot())
+	return NewUser(mapset.NewSet(), storage.GenerateRoot())
 }
 
 func NewOperation(owner string, publicKey string, path string, name string, timestamp time.Time) *Operation {
@@ -77,6 +76,21 @@ func (u *User) LeaveGroup(group string) bool {
 
 func (u *User) IsInGroup(group string) bool {
 	return u.Groups.Contains(group)
+}
+
+func (u *User) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(u)
+	return buf.Bytes()
+}
+
+func UserFromBytes(data []byte) (*User, error) {
+	buf := bytes.NewBuffer(data)
+	u := &User{}
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(u)
+	return u, err
 }
 
 func (o Operation) ToBytes() []byte {
