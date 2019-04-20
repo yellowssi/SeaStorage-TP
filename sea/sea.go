@@ -69,9 +69,10 @@ func (f Fragment) ToBytes() []byte {
 	return buf.Bytes()
 }
 
-func FragmentFromBytes(data []byte) (fragment Fragment, err error) {
+func FragmentFromBytes(data []byte) (Fragment, error) {
+	fragment := Fragment{}
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
-	err = dec.Decode(fragment)
+	err := dec.Decode(&fragment)
 	return fragment, err
 }

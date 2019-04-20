@@ -71,14 +71,15 @@ func NewSeaStoragePayload(action uint, name string, PWD string, target string, t
 	}
 }
 
-func SeaStoragePayloadFromBytes(payloadData []byte) (payload *SeaStoragePayload, err error) {
+func SeaStoragePayloadFromBytes(payloadData []byte) (*SeaStoragePayload, error) {
 	if payloadData == nil {
 		return nil, &processor.InvalidTransactionError{Msg: "Must contain payload"}
 	}
+	pl := &SeaStoragePayload{}
 	buf := bytes.NewBuffer(payloadData)
 	dec := gob.NewDecoder(buf)
-	err = dec.Decode(payload)
-	return payload, err
+	err := dec.Decode(pl)
+	return pl, err
 }
 
 func (ssp *SeaStoragePayload) ToBytes() []byte {
