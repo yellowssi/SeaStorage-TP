@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"encoding/gob"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage/crypto"
@@ -258,4 +259,12 @@ func (root *Root) GetINode(path string, name string) (INode, error) {
 
 func (root *Root) AddSea(path string, name string, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(path, name, hash, sea)
+}
+
+func RootFromBytes(data []byte) (*Root, error) {
+	root := &Root{}
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(root)
+	return root, err
 }
