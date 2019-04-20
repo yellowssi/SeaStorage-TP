@@ -3,14 +3,13 @@ package user
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/deckarep/golang-set"
 	"gitlab.com/SeaStorage/SeaStorage/crypto"
 	"gitlab.com/SeaStorage/SeaStorage/storage"
 	"time"
 )
 
 type User struct {
-	Groups mapset.Set
+	Groups []string
 	Root   *storage.Root
 }
 
@@ -27,7 +26,7 @@ type OperationSignature struct {
 	Signature string
 }
 
-func NewUser(groups mapset.Set, root *storage.Root) *User {
+func NewUser(groups []string, root *storage.Root) *User {
 	return &User{
 		Groups: groups,
 		Root:   root,
@@ -35,7 +34,7 @@ func NewUser(groups mapset.Set, root *storage.Root) *User {
 }
 
 func GenerateUser() *User {
-	return NewUser(mapset.NewSet(), storage.GenerateRoot())
+	return NewUser(make([]string, 0), storage.GenerateRoot())
 }
 
 func NewOperation(owner string, publicKey string, path string, name string, timestamp time.Time) *Operation {
@@ -58,24 +57,32 @@ func NewOperationSignature(operation Operation, privateKey string) (*OperationSi
 }
 
 func (u *User) JoinGroup(group string) bool {
-	if u.Groups.Contains(group) {
-		return false
-	} else {
-		u.Groups.Add(group)
-		return true
+	for _, g := range u.Groups {
+		if g == group {
+			return false
+		}
 	}
+	u.Groups = append(u.Groups, group)
+	return true
 }
 
 func (u *User) LeaveGroup(group string) bool {
-	if u.Groups.Contains(group) {
-		u.Groups.Remove(group)
-		return true
+	for i, g := range u.Groups {
+		if g == group {
+			u.Groups = append(u.Groups[:i], u.Groups[i+1:]...)
+			return true
+		}
 	}
 	return false
 }
 
 func (u *User) IsInGroup(group string) bool {
-	return u.Groups.Contains(group)
+	for _, g := range u.Groups {
+		if g == group {
+			return true
+		}
+	}
+	return false
 }
 
 func (u *User) ToBytes() []byte {

@@ -5,7 +5,6 @@ go 1.12
 require (
 	github.com/btcsuite/btcd v0.0.0-20190315201642-aa6e0f35703c
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deckarep/golang-set v1.7.1
 	github.com/golang/protobuf v1.3.1
 	github.com/hyperledger/sawtooth-sdk-go v0.1.1
 	github.com/jessevdk/go-flags v1.4.0
