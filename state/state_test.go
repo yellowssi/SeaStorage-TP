@@ -24,7 +24,7 @@ func TestMakeAddress(t *testing.T) {
 	cont := signing.NewSecp256k1Context()
 	priv := cont.NewRandomPrivateKey()
 	pub := cont.GetPublicKey(priv)
-	address := MakeAddress(AddressTypeUser, "", pub.AsHex())
+	address := MakeAddress(AddressTypeUser, "Test", pub.AsHex())
 	t.Log(address)
 	t.Log(len(address))
 }

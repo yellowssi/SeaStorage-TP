@@ -366,13 +366,13 @@ func deserializeSea(data []byte) (sea *sea.Sea, err error) {
 func MakeAddress(addressType AddressType, name string, publicKey string) string {
 	switch addressType {
 	case AddressTypeUser:
-		return Namespace + UserNamespace + crypto.SHA512HexFromHex(name + publicKey)[:60]
+		return Namespace + UserNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
 	case AddressTypeGroup:
-		return Namespace + GroupNamespace + crypto.SHA512HexFromHex(name)[:60]
+		return Namespace + GroupNamespace + crypto.SHA512HexFromBytes([]byte(name))[:60]
 	case AddressTypeSea:
-		return Namespace + SeaNamespace + crypto.SHA512HexFromHex(name + publicKey)[:60]
+		return Namespace + SeaNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
 	case AddressTypeShared:
-		return Namespace + SharedNamespace + crypto.SHA512HexFromHex(name + publicKey)[:60]
+		return Namespace + SharedNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
 	default:
 		return string("")
 	}
