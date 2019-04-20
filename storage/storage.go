@@ -167,7 +167,7 @@ func (root *Root) UpdateFileKey(path string, info FileInfo) error {
 
 func (root *Root) PublicKey(publicKey string, key string) error {
 	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
-	keyIndex := crypto.SHA512HexFromHex(crypto.BytesToHex(keyBytes))
+	keyIndex := crypto.SHA512HexFromBytes(keyBytes)
 	target, ok := root.Keys[keyIndex]
 	if ok {
 		if crypto.AESKeyVerify(publicKey, key, target.Key) {

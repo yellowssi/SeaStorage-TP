@@ -26,11 +26,11 @@ var (
 )
 
 var (
-	Namespace       = crypto.SHA512HexFromHex("SeaStorage")[:6]
-	UserNamespace   = crypto.SHA256HexFromHex("User")[:4]
-	GroupNamespace  = crypto.SHA256HexFromHex("Group")[:4]
-	SeaNamespace    = crypto.SHA256HexFromHex("Sea")[:4]
-	SharedNamespace = crypto.SHA256HexFromHex("Shared")[:4]
+	Namespace       = crypto.SHA512HexFromBytes([]byte("SeaStorage"))[:6]
+	UserNamespace   = crypto.SHA256HexFromBytes([]byte("User"))[:4]
+	GroupNamespace  = crypto.SHA256HexFromBytes([]byte("Group"))[:4]
+	SeaNamespace    = crypto.SHA256HexFromBytes([]byte("Sea"))[:4]
+	SharedNamespace = crypto.SHA256HexFromBytes([]byte("Shared"))[:4]
 )
 
 type SeaStorageState struct {
