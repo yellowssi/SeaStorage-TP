@@ -1,8 +1,7 @@
 package state
 
 import (
-	"github.com/mitchellh/copystructure"
-	"gitlab.com/SeaStorage/SeaStorage/storage"
+	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"testing"
 )
 
@@ -21,16 +20,11 @@ func TestSeaStorageState_GetSea(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
-	dir := storage.NewDirectory("test")
-	_, err := dir.CreateDirectory("/test1/")
-	if err != nil {
-		t.Error(err)
-	}
-	test, err := copystructure.Copy(dir)
-	if err != nil {
-		t.Error(err)
-	}
-	t.Log(dir)
-	t.Log(test.(*storage.Directory))
+func TestMakeAddress(t *testing.T) {
+	cont := signing.NewSecp256k1Context()
+	priv := cont.NewRandomPrivateKey()
+	pub := cont.GetPublicKey(priv)
+	address := MakeAddress(AddressTypeUser, "", pub.AsHex())
+	t.Log(address)
+	t.Log(len(address))
 }
