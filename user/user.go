@@ -3,8 +3,8 @@ package user
 import (
 	"bytes"
 	"encoding/gob"
-	"gitlab.com/SeaStorage/SeaStorage/crypto"
-	"gitlab.com/SeaStorage/SeaStorage/storage"
+	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
 	"time"
 )
 

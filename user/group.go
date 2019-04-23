@@ -3,7 +3,7 @@ package user
 import (
 	"bytes"
 	"encoding/gob"
-	"gitlab.com/SeaStorage/SeaStorage/storage"
+	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
 )
 
 type Role uint8

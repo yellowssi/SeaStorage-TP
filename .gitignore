@@ -28,4 +28,4 @@ export_presets.cfg
 *.out
 
 vendor/
-/SeaStorage
+/SeaStorage-TP

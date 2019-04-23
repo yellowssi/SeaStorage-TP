@@ -1,4 +1,4 @@
-module gitlab.com/SeaStorage/SeaStorage
+module gitlab.com/SeaStorage/SeaStorage-TP
 
 go 1.12
 

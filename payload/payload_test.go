@@ -1,8 +1,8 @@
 package payload
 
 import (
-	"gitlab.com/SeaStorage/SeaStorage/storage"
-	"gitlab.com/SeaStorage/SeaStorage/user"
+	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
+	"gitlab.com/SeaStorage/SeaStorage-TP/user"
 	"testing"
 )
 

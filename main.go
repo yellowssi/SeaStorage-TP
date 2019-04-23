@@ -5,7 +5,7 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/jessevdk/go-flags"
-	"gitlab.com/SeaStorage/SeaStorage/handler"
+	"gitlab.com/SeaStorage/SeaStorage-TP/handler"
 	"os"
 	"syscall"
 )
