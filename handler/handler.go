@@ -54,7 +54,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	// User Action
 	case payload.UserCreateDirectory:
-		return st.UserCreateDirectory(pl.Name, user, pl.PWD, pl.Target)
+		return st.UserCreateDirectory(pl.Name, user, pl.PWD)
 	case payload.UserCreateFile:
 		return st.UserCreateFile(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserUpdateName:

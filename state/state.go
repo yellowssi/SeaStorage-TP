@@ -225,12 +225,12 @@ func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address string) 
 	return nil
 }
 
-func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey string, path string, name string) error {
+func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey string, path string) error {
 	u, err := sss.GetUser(username, publicKey)
 	if err != nil {
 		return err
 	}
-	err = u.Root.CreateDirectory(path + "/" + name)
+	err = u.Root.CreateDirectory(path)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
