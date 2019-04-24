@@ -2,7 +2,6 @@ package state
 
 import (
 	"bytes"
-	"errors"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/mitchellh/copystructure"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
@@ -62,21 +61,21 @@ func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.Us
 		sss.userCache[address] = results[address]
 		return user.UserFromBytes(results[address])
 	}
-	return nil, errors.New("user doesn't exists")
+	return nil, &processor.InvalidTransactionError{Msg: "user doesn't exists"}
 }
 
 func (sss *SeaStorageState) CreateUser(username string, publicKey string) error {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	_, ok := sss.userCache[address]
 	if ok {
-		return errors.New("user exists")
+		return &processor.InvalidTransactionError{Msg: "user exists"}
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
 	}
 	if len(results[address]) > 0 {
-		return errors.New("user exists")
+		return &processor.InvalidTransactionError{Msg: "user exists"}
 	}
 	return sss.saveUser(user.GenerateUser(), address)
 }
@@ -110,21 +109,21 @@ func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 		sss.seaCache[address] = results[address]
 		return user.GroupFromBytes(results[address])
 	}
-	return nil, errors.New("group doesn't exists")
+	return nil, &processor.InvalidTransactionError{Msg: "group doesn't exists"}
 }
 
 func (sss *SeaStorageState) CreateGroup(groupName string, leader string, key string) error {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
 	_, ok := sss.groupCache[address]
 	if ok {
-		return errors.New("group exists")
+		return &processor.InvalidTransactionError{Msg: "group exists"}
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
 	}
 	if len(results[address]) > 0 {
-		return errors.New("group exists")
+		return &processor.InvalidTransactionError{Msg: "group exists"}
 	}
 	return sss.saveGroup(user.GenerateGroup(groupName, leader), address)
 }
@@ -158,21 +157,21 @@ func (sss *SeaStorageState) GetSea(seaName string, publicKey string) (*sea.Sea, 
 		sss.seaCache[address] = results[address]
 		return sea.SeaFromBytes(results[address])
 	}
-	return nil, errors.New("sea doesn't exists")
+	return nil, &processor.InvalidTransactionError{Msg: "sea doesn't exists"}
 }
 
 func (sss *SeaStorageState) CreateSea(seaName string, publicKey string) error {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	_, ok := sss.seaCache[address]
 	if ok {
-		return errors.New("sea exists")
+		return &processor.InvalidTransactionError{Msg: "sea exists"}
 	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
 	}
 	if len(results[address]) > 0 {
-		return errors.New("sea exists")
+		return &processor.InvalidTransactionError{Msg: "sea exists"}
 	}
 	return sss.saveSea(sea.NewSea(), address)
 }
@@ -310,7 +309,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey string, hash 
 		return err
 	}
 	if !sign.Verify() || sign.Operation.Timestamp.Add(deadlineTime).Before(time.Now()) {
-		return errors.New("signature is invalid")
+		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
 	u, err := sss.GetUser(sign.Operation.Owner, sign.Operation.PublicKey)
 	if err != nil {
