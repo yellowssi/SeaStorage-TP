@@ -40,16 +40,16 @@ func TestValidPath(t *testing.T) {
 	}
 }
 
-func TestGob(t *testing.T) {
+func TestRoot_CreateDirectory(t *testing.T) {
 	root := NewDirectory("root")
-	_, _ = root.CreateDirectory("/test")
-	_ = root.CreateFile("/", "testFile", 10, "test", "key", make([]*Fragment, 0))
-	_, _ = root.CreateDirectory("/test/testDir")
-	t.Log(root)
-	data := root.ToBytes()
-	test, err := DirectoryFromBytes(data)
+	_, err := root.CreateDirectory("/home/seastorage/")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	t.Log(test)
+	_, err = root.CreateDirectory("/lib/")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(root)
+	t.Log(root.List("/"))
 }

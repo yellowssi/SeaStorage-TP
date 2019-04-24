@@ -196,7 +196,7 @@ func (d *Directory) CreateDirectory(path string) (*Directory, error) {
 					return nil, errors.New("The same Name file exists: " + strings.Join(pathParams[:i], "/"))
 				}
 			} else if j == len(dir.INodes)-1 {
-				newDir = NewDirectory(pathParams[j])
+				newDir = NewDirectory(pathParams[i])
 				dir.INodes = append(dir.INodes, newDir)
 				dir = newDir
 				break
