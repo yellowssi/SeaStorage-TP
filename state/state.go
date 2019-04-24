@@ -232,7 +232,7 @@ func (sss *SeaStorageState) UserCreateDirectory(username string, publicKey strin
 	}
 	err = u.Root.CreateDirectory(path + "/" + name)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -245,7 +245,7 @@ func (sss *SeaStorageState) UserCreateFile(username string, publicKey string, pa
 	}
 	err = u.Root.CreateFile(path, info)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -258,7 +258,7 @@ func (sss *SeaStorageState) UserUpdateName(username string, publicKey string, pa
 	}
 	err = u.Root.UpdateName(path, name, newName)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -271,7 +271,7 @@ func (sss *SeaStorageState) UserUpdateFileData(username string, publicKey string
 	}
 	err = u.Root.UpdateFileData(path, info)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -284,7 +284,7 @@ func (sss *SeaStorageState) UserUpdateFileKey(username string, publicKey string,
 	}
 	err = u.Root.UpdateFileKey(path, info)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -297,7 +297,7 @@ func (sss *SeaStorageState) UserPublicKey(username string, publicKey string, key
 	}
 	err = u.Root.PublicKey(publicKey, key)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -317,7 +317,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName string, publicKey string, hash 
 	}
 	err = u.Root.AddSea(sign.Operation.Path, sign.Operation.Name, hash, storage.NewFragmentSea(publicKey))
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 	s.Handles++
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
