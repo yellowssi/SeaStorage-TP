@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
-	"path"
 	"strings"
 )
 
@@ -53,6 +52,9 @@ func GenerateRoot() *Root {
 func validPath(p string) error {
 	if !strings.HasPrefix(p, "/") {
 		return errors.New("Path should start with '/': " + p)
+	}
+	if !strings.HasSuffix(p, "/") {
+		return errors.New("Path should end with '/': " + p)
 	}
 	pParams := strings.Split(p, "/")
 	for i := 1; i < len(pParams)-1; i++ {
@@ -196,7 +198,7 @@ func (root *Root) DeleteFile(p string, name string) error {
 		default:
 		}
 	}
-	return errors.New("File doesn't exists: " + path.Join(p, name))
+	return errors.New("File doesn't exists: " + p + name)
 }
 
 func (root *Root) CreateDirectory(p string) error {
@@ -227,7 +229,7 @@ func (root *Root) DeleteDirectory(p string, name string) error {
 		default:
 		}
 	}
-	return errors.New("Path doesn't exists: " + path.Join(p, name) + "/")
+	return errors.New("Path doesn't exists: " + p + name + "/")
 }
 
 func (root *Root) GetFile(p string, name string) (file FileInfo, err error) {
