@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
+	"path"
 	"strings"
 )
 
@@ -49,17 +50,14 @@ func GenerateRoot() *Root {
 
 // Check the path whether valid.
 // Valid Name shouldn't contain '/'
-func validPath(path string) error {
-	if !strings.HasPrefix(path, "/") {
-		return errors.New("Path should start with '/': " + path)
+func validPath(p string) error {
+	if !strings.HasPrefix(p, "/") {
+		return errors.New("Path should start with '/': " + p)
 	}
-	if !strings.HasSuffix(path, "/") {
-		return errors.New("Path should end with '/': " + path)
-	}
-	pathParams := strings.Split(path, "/")
-	for i := 1; i < len(pathParams)-1; i++ {
-		if len(pathParams[i]) == 0 {
-			return errors.New("Path shouldn't contain '//': " + path)
+	pParams := strings.Split(p, "/")
+	for i := 1; i < len(pParams)-1; i++ {
+		if len(pParams[i]) == 0 {
+			return errors.New("Path shouldn't contain '//': " + p)
 		}
 	}
 	return nil
@@ -79,8 +77,8 @@ func validName(name string) error {
 	return nil
 }
 
-func validInfo(path string, name string) error {
-	err := validPath(path)
+func validInfo(p string, name string) error {
+	err := validPath(p)
 	if err != nil {
 		return err
 	}
@@ -123,17 +121,17 @@ func (root *Root) updateKeyUsed(keyUsed map[string]int) {
 	}
 }
 
-func (root *Root) CreateFile(path string, info FileInfo) error {
-	err := validInfo(path, info.Name)
+func (root *Root) CreateFile(p string, info FileInfo) error {
+	err := validInfo(p, info.Name)
 	if err != nil {
 		return err
 	}
 	fileKeyIndex := root.SearchKey(info.Key, true, true)
-	return root.Home.CreateFile(path, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
+	return root.Home.CreateFile(p, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
 }
 
-func (root *Root) UpdateName(path string, name string, newName string) error {
-	err := validInfo(path, name)
+func (root *Root) UpdateName(p string, name string, newName string) error {
+	err := validInfo(p, name)
 	if err != nil {
 		return err
 	}
@@ -141,24 +139,24 @@ func (root *Root) UpdateName(path string, name string, newName string) error {
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateName(path, name, newName)
+	return root.Home.UpdateName(p, name, newName)
 }
 
-func (root *Root) UpdateFileData(path string, info FileInfo) error {
-	err := validInfo(path, info.Name)
+func (root *Root) UpdateFileData(p string, info FileInfo) error {
+	err := validInfo(p, info.Name)
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileData(path, info.Name, info.Size, info.Hash, info.Fragments)
+	return root.Home.UpdateFileData(p, info.Name, info.Size, info.Hash, info.Fragments)
 }
 
-func (root *Root) UpdateFileKey(path string, info FileInfo) error {
-	err := validInfo(path, info.Name)
+func (root *Root) UpdateFileKey(p string, info FileInfo) error {
+	err := validInfo(p, info.Name)
 	if err != nil {
 		return err
 	}
 	_ = root.SearchKey(info.Key, true, false)
-	keyUsed, err := root.Home.UpdateFileKey(path, info.Name, crypto.SHA512HexFromHex(info.Key), info.Hash, info.Fragments)
+	keyUsed, err := root.Home.UpdateFileKey(p, info.Name, crypto.SHA512HexFromHex(info.Key), info.Hash, info.Fragments)
 	if err != nil {
 		return err
 	}
@@ -179,12 +177,12 @@ func (root *Root) PublicKey(publicKey string, key string) error {
 	return errors.New("Key error or not exists. ")
 }
 
-func (root *Root) DeleteFile(path string, name string) error {
-	err := validInfo(path, name)
+func (root *Root) DeleteFile(p string, name string) error {
+	err := validInfo(p, name)
 	if err != nil {
 		return err
 	}
-	dir, err := root.Home.checkPathExists(path)
+	dir, err := root.Home.checkPathExists(p)
 	if err != nil {
 		return err
 	}
@@ -198,24 +196,24 @@ func (root *Root) DeleteFile(path string, name string) error {
 		default:
 		}
 	}
-	return errors.New("File doesn't exists: " + path + name)
+	return errors.New("File doesn't exists: " + path.Join(p, name))
 }
 
-func (root *Root) CreateDirectory(path string) error {
-	err := validPath(path)
+func (root *Root) CreateDirectory(p string) error {
+	err := validPath(p)
 	if err != nil {
 		return err
 	}
-	_, err = root.Home.CreateDirectory(path)
+	_, err = root.Home.CreateDirectory(p)
 	return err
 }
 
-func (root *Root) DeleteDirectory(path string, name string) error {
-	err := validInfo(path, name)
+func (root *Root) DeleteDirectory(p string, name string) error {
+	err := validInfo(p, name)
 	if err != nil {
 		return err
 	}
-	dir, err := root.Home.checkPathExists(path)
+	dir, err := root.Home.checkPathExists(p)
 	if err != nil {
 		return err
 	}
@@ -229,15 +227,15 @@ func (root *Root) DeleteDirectory(path string, name string) error {
 		default:
 		}
 	}
-	return errors.New("Path doesn't exists: " + path + name + "/")
+	return errors.New("Path doesn't exists: " + path.Join(p, name) + "/")
 }
 
-func (root *Root) GetFile(path string, name string) (file FileInfo, err error) {
-	err = validInfo(path, name)
+func (root *Root) GetFile(p string, name string) (file FileInfo, err error) {
+	err = validInfo(p, name)
 	if err != nil {
 		return
 	}
-	f, err := root.Home.checkFileExists(path, name)
+	f, err := root.Home.checkFileExists(p, name)
 	if err != nil {
 		return
 	}
@@ -245,28 +243,28 @@ func (root *Root) GetFile(path string, name string) (file FileInfo, err error) {
 	return *NewFileInfo(f.Name, f.Size, f.Hash, key.Key, f.Fragments), nil
 }
 
-func (root *Root) GetDirectory(path string) (dir *Directory, err error) {
-	err = validPath(path)
+func (root *Root) GetDirectory(p string) (dir *Directory, err error) {
+	err = validPath(p)
 	if err != nil {
 		return
 	}
-	return root.Home.checkPathExists(path)
+	return root.Home.checkPathExists(p)
 }
 
-func (root *Root) GetINode(path string, name string) (INode, error) {
-	return root.Home.checkINodeExists(path, name)
+func (root *Root) GetINode(p string, name string) (INode, error) {
+	return root.Home.checkINodeExists(p, name)
 }
 
-func (root *Root) ListDirectory(path string) (iNodes []INodeInfo, err error) {
-	err = validPath(path)
+func (root *Root) ListDirectory(p string) (iNodes []INodeInfo, err error) {
+	err = validPath(p)
 	if err != nil {
 		return
 	}
-	return root.Home.List(path)
+	return root.Home.List(p)
 }
 
-func (root *Root) AddSea(path string, name string, hash string, sea *FragmentSea) error {
-	return root.Home.AddSea(path, name, hash, sea)
+func (root *Root) AddSea(p string, name string, hash string, sea *FragmentSea) error {
+	return root.Home.AddSea(p, name, hash, sea)
 }
 
 func RootFromBytes(data []byte) (*Root, error) {
