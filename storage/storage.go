@@ -245,16 +245,24 @@ func (root *Root) GetFile(path string, name string) (file FileInfo, err error) {
 	return *NewFileInfo(f.Name, f.Size, f.Hash, key.Key, f.Fragments), nil
 }
 
+func (root *Root) GetDirectory(path string) (dir *Directory, err error) {
+	err = validPath(path)
+	if err != nil {
+		return
+	}
+	return root.Home.checkPathExists(path)
+}
+
+func (root *Root) GetINode(path string, name string) (INode, error) {
+	return root.Home.checkINodeExists(path, name)
+}
+
 func (root *Root) ListDirectory(path string) (iNodes []INodeInfo, err error) {
 	err = validPath(path)
 	if err != nil {
 		return
 	}
 	return root.Home.List(path)
-}
-
-func (root *Root) GetINode(path string, name string) (INode, error) {
-	return root.Home.checkINodeExists(path, name)
 }
 
 func (root *Root) AddSea(path string, name string, hash string, sea *FragmentSea) error {
