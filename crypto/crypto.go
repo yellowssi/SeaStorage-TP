@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
-	"errors"
 	ellcurv "github.com/btcsuite/btcd/btcec"
 )
 
@@ -134,8 +133,8 @@ func Decryption(privateKey string, data string) ([]byte, error) {
 
 // AES
 func GenerateRandomAESKey(len int) []byte {
-	if len != 128 && len != 256 && len != 512 {
-		panic(errors.New("AES key length should be 128 or 256 or 512"))
+	if len != 128 && len != 192 && len != 256 {
+		panic(aes.KeySizeError(len))
 	}
 	key := make([]byte, len)
 	_, err := rand.Read(key)
