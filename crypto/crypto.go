@@ -136,7 +136,7 @@ func GenerateRandomAESKey(len int) []byte {
 	if len != 128 && len != 192 && len != 256 {
 		panic(aes.KeySizeError(len))
 	}
-	key := make([]byte, len)
+	key := make([]byte, len/8)
 	_, err := rand.Read(key)
 	if err != nil {
 		panic(err.Error())
