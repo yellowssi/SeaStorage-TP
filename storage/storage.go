@@ -193,9 +193,8 @@ func (root *Root) DeleteFile(p string, name string) error {
 		case *File:
 			if iNode.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+				return nil
 			}
-			return nil
-		default:
 		}
 	}
 	return errors.New("File doesn't exists: " + p + name)
@@ -224,9 +223,8 @@ func (root *Root) DeleteDirectory(p string, name string) error {
 		case *Directory:
 			if iNode.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+				return nil
 			}
-			return nil
-		default:
 		}
 	}
 	return errors.New("Path doesn't exists: " + p + name + "/")
