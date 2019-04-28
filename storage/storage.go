@@ -44,7 +44,7 @@ func NewFileInfo(name string, size uint, hash string, key string, fragments []*F
 }
 
 func GenerateRoot() *Root {
-	return NewRoot(NewDirectory("home"), make(map[string]*FileKey))
+	return NewRoot(NewDirectory("root"), make(map[string]*FileKey))
 }
 
 // Check the path whether valid.

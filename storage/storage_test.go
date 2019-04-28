@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+var root = GenerateRoot()
+
 func TestValidName(t *testing.T) {
 	var err error
 	err = validName("abcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()-_=+[]{}|;:'\",.<>?")
@@ -41,15 +43,21 @@ func TestValidPath(t *testing.T) {
 }
 
 func TestRoot_CreateDirectory(t *testing.T) {
-	root := NewDirectory("root")
-	_, err := root.CreateDirectory("/home/seastorage/")
+	err := root.CreateDirectory("/home/SeaStorage/")
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = root.CreateDirectory("/lib/")
+	err = root.CreateDirectory("/lib/")
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(root)
-	t.Log(root.List("/"))
+	t.Log(root.ListDirectory("/"))
+}
+
+func TestRoot_GetDirectory(t *testing.T) {
+	dir, err := root.GetDirectory("/home/SeaStorage/")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(dir)
 }
