@@ -87,7 +87,7 @@ func SHA512HexFromHex(data string) string {
 }
 
 // Ellcurv
-func Encryption(publicKey string, data string) ([]byte, error) {
+func Encryption(publicKey, data string) ([]byte, error) {
 	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func Encryption(publicKey string, data string) ([]byte, error) {
 	return result, nil
 }
 
-func Verify(publicKey string, sign string, data string) bool {
+func Verify(publicKey, sign, data string) bool {
 	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
 	if err != nil {
 		return false
@@ -112,7 +112,7 @@ func Verify(publicKey string, sign string, data string) bool {
 	return signature.Verify(hash, pub)
 }
 
-func Sign(privateKey string, data string) ([]byte, error) {
+func Sign(privateKey, data string) ([]byte, error) {
 	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), HexToBytes(privateKey))
 	hash := SHA512BytesFromHex(data)
 	signature, err := priv.Sign(hash)
@@ -122,7 +122,7 @@ func Sign(privateKey string, data string) ([]byte, error) {
 	return signature.Serialize(), nil
 }
 
-func Decryption(privateKey string, data string) ([]byte, error) {
+func Decryption(privateKey, data string) ([]byte, error) {
 	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), HexToBytes(privateKey))
 	result, err := ellcurv.Decrypt(priv, HexToBytes(data))
 	if err != nil {
@@ -149,7 +149,7 @@ func NewAESKey(len int) string {
 	return BytesToHex(keyBytes)
 }
 
-func AESKeyEncryptedByPublicKey(key string, publicKey string) []byte {
+func AESKeyEncryptedByPublicKey(key, publicKey string) []byte {
 	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
 	result, err := ellcurv.Encrypt(pub, HexToBytes(key))
 	if err != nil {
@@ -158,7 +158,7 @@ func AESKeyEncryptedByPublicKey(key string, publicKey string) []byte {
 	return result
 }
 
-func AESKeyVerify(publicKey string, key string, encryptedKey string) bool {
+func AESKeyVerify(publicKey, key, encryptedKey string) bool {
 	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
 	if err != nil {
 		panic(err.Error())
@@ -170,7 +170,7 @@ func AESKeyVerify(publicKey string, key string, encryptedKey string) bool {
 	return bytes.Equal(result, HexToBytes(encryptedKey))
 }
 
-func AESKeyEncryption(key string, data string) (result []byte, err error) {
+func AESKeyEncryption(key, data string) (result []byte, err error) {
 	cipher, err := aes.NewCipher(HexToBytes(key))
 	if err != nil {
 		return nil, err
@@ -179,7 +179,7 @@ func AESKeyEncryption(key string, data string) (result []byte, err error) {
 	return
 }
 
-func AESKeyDecryption(key string, data string) (result []byte, err error) {
+func AESKeyDecryption(key, data string) (result []byte, err error) {
 	cipher, err := aes.NewCipher(HexToBytes(key))
 	if err != nil {
 		return nil, err

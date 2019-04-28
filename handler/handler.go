@@ -57,6 +57,10 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return st.UserCreateDirectory(pl.Name, user, pl.PWD)
 	case payload.UserCreateFile:
 		return st.UserCreateFile(pl.Name, user, pl.PWD, pl.FileInfo)
+	case payload.UserDeleteDirectory:
+		return st.UserDeleteDirectory(pl.Name, user, pl.PWD, pl.Target)
+	case payload.UserDeleteFile:
+		return st.UserDeleteFile(pl.Name, user, pl.PWD, pl.Target)
 	case payload.UserUpdateName:
 		return st.UserUpdateName(pl.Name, user, pl.PWD, pl.Target, pl.Target2)
 	case payload.UserUpdateFileData:
@@ -70,6 +74,8 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	// Group Action
 	//case payload.GroupCreateDirectory:
 	//case payload.GroupCreateFile:
+	//case payload.GroupDeleteDirectory:
+	//case payload.GroupDeleteFile:
 	//case payload.GroupUpdateFileName:
 	//case payload.GroupUpdateFileData:
 	//case payload.GroupUpdateFileKey:

@@ -23,20 +23,24 @@ var (
 var (
 	UserCreateFile      uint = 10
 	UserCreateDirectory uint = 11
-	UserUpdateName      uint = 12
-	UserUpdateFileData  uint = 13
-	UserUpdateFileKey   uint = 14
-	UserPublicKey       uint = 15
+	UserDeleteFile      uint = 12
+	UserDeleteDirectory uint = 13
+	UserUpdateName      uint = 14
+	UserUpdateFileData  uint = 15
+	UserUpdateFileKey   uint = 16
+	UserPublicKey       uint = 17
 )
 
 // Group action
 var (
 	GroupCreateFile      uint = 20
 	GroupCreateDirectory uint = 21
-	GroupUpdateFileName  uint = 22
-	GroupUpdateFileData  uint = 23
-	GroupUpdateFileKey   uint = 24
-	GroupPublicKey       uint = 25
+	GroupDeleteFile      uint = 22
+	GroupDeleteDirectory uint = 23
+	GroupUpdateFileName  uint = 24
+	GroupUpdateFileData  uint = 25
+	GroupUpdateFileKey   uint = 26
+	GroupPublicKey       uint = 27
 )
 
 // Sea Action

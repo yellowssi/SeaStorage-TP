@@ -22,7 +22,7 @@ type Group struct {
 	Root    *storage.Root
 }
 
-func NewGroup(name string, leader string, members map[string]Role, root *storage.Root) *Group {
+func NewGroup(name, leader string, members map[string]Role, root *storage.Root) *Group {
 	return &Group{
 		Name:    name,
 		Leader:  leader,
@@ -31,11 +31,11 @@ func NewGroup(name string, leader string, members map[string]Role, root *storage
 	}
 }
 
-func GenerateGroup(name string, leader string) *Group {
+func GenerateGroup(name, leader string) *Group {
 	return NewGroup(name, leader, map[string]Role{leader: RoleOwner}, storage.GenerateRoot())
 }
 
-func (g *Group) UpdateLeader(user string, newLeader string) bool {
+func (g *Group) UpdateLeader(user, newLeader string) bool {
 	if user == g.Leader {
 		g.Leader = newLeader
 		return true
@@ -43,7 +43,7 @@ func (g *Group) UpdateLeader(user string, newLeader string) bool {
 	return false
 }
 
-func (g *Group) UpdateMemberRole(user string, member string, role Role) bool {
+func (g *Group) UpdateMemberRole(user, member string, role Role) bool {
 	if g.Members[user] != RoleOwner {
 		return false
 	} else if g.Members[member] == RoleOwner && g.Leader != user {
@@ -53,7 +53,7 @@ func (g *Group) UpdateMemberRole(user string, member string, role Role) bool {
 	return true
 }
 
-func (g *Group) RemoveMember(user string, member string) bool {
+func (g *Group) RemoveMember(user, member string) bool {
 	if g.Members[user] != RoleOwner {
 		return false
 	} else if g.Members[member] == RoleOwner && g.Leader != user {

@@ -37,7 +37,7 @@ func GenerateUser() *User {
 	return NewUser(make([]string, 0), storage.GenerateRoot())
 }
 
-func NewOperation(owner string, publicKey string, path string, name string, timestamp time.Time) *Operation {
+func NewOperation(owner, publicKey, path, name string, timestamp time.Time) *Operation {
 	return &Operation{
 		Owner:     owner,
 		PublicKey: publicKey,
