@@ -197,6 +197,7 @@ func (root *Root) DeleteFile(p string, name string) error {
 			}
 		}
 	}
+	root.Home.updateDirectorySize(p)
 	return errors.New("File doesn't exists: " + p + name)
 }
 
@@ -227,6 +228,7 @@ func (root *Root) DeleteDirectory(p string, name string) error {
 			}
 		}
 	}
+	root.Home.updateDirectorySize(p)
 	return errors.New("Path doesn't exists: " + p + name + "/")
 }
 
