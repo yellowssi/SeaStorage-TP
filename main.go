@@ -51,7 +51,7 @@ func main() {
 	logger.Debugf("verbose = %v\n", len(opts.Verbose))
 	logger.Debugf("endpoint = %v\n", endpoint)
 
-	hd := handler.NewSeaStorageHandler([]string{"1.0"})
+	hd := handler.NewSeaStorageHandler(FamilyName, []string{Version})
 	proc := processor.NewTransactionProcessor(endpoint)
 	proc.AddHandler(hd)
 	proc.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)

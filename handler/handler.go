@@ -16,8 +16,8 @@ type SeaStorageHandler struct {
 	Version []string
 }
 
-func NewSeaStorageHandler(version []string) *SeaStorageHandler {
-	return &SeaStorageHandler{Name: "SeaStorage", Version: version}
+func NewSeaStorageHandler(name string, version []string) *SeaStorageHandler {
+	return &SeaStorageHandler{Name: name, Version: version}
 }
 
 func (h *SeaStorageHandler) FamilyName() string {
