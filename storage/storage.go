@@ -190,9 +190,12 @@ func (root *Root) DeleteFile(p string, name string) error {
 		return err
 	}
 	keyIndex, err := root.Home.DeleteFile(p, name)
+	if err != nil {
+		return err
+	}
 	root.updateKeyUsed(map[string]int{keyIndex: 1})
 	root.Home.updateDirectorySize(p)
-	return errors.New("File doesn't exists: " + p + name)
+	return nil
 }
 
 func (root *Root) CreateDirectory(p string) error {
