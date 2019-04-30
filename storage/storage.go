@@ -129,7 +129,12 @@ func (root *Root) CreateFile(p string, info FileInfo) error {
 		return err
 	}
 	fileKeyIndex := root.SearchKey(info.Key, true, true)
-	return root.Home.CreateFile(p, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
+	err = root.Home.CreateFile(p, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
+	if err != nil {
+		return err
+	}
+	root.Home.updateDirectorySize(p)
+	return nil
 }
 
 func (root *Root) UpdateName(p string, name string, newName string) error {
@@ -184,19 +189,8 @@ func (root *Root) DeleteFile(p string, name string) error {
 	if err != nil {
 		return err
 	}
-	dir, err := root.Home.checkPathExists(p)
-	if err != nil {
-		return err
-	}
-	for i, iNode := range dir.INodes {
-		switch iNode.(type) {
-		case *File:
-			if iNode.GetName() == name {
-				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return nil
-			}
-		}
-	}
+	keyIndex, err := root.Home.DeleteFile(p, name)
+	root.updateKeyUsed(map[string]int{keyIndex: 1})
 	root.Home.updateDirectorySize(p)
 	return errors.New("File doesn't exists: " + p + name)
 }
@@ -215,19 +209,11 @@ func (root *Root) DeleteDirectory(p string, name string) error {
 	if err != nil {
 		return err
 	}
-	dir, err := root.Home.checkPathExists(p)
+	operations, err := root.Home.DeleteDirectory(p, name)
 	if err != nil {
 		return err
 	}
-	for i, iNode := range dir.INodes {
-		switch iNode.(type) {
-		case *Directory:
-			if iNode.GetName() == name {
-				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return nil
-			}
-		}
-	}
+	root.updateKeyUsed(operations)
 	root.Home.updateDirectorySize(p)
 	return errors.New("Path doesn't exists: " + p + name + "/")
 }

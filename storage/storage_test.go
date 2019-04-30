@@ -59,5 +59,31 @@ func TestRoot_GetDirectory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(dir)
+	t.Log(dir.ToJson())
+}
+
+func TestRoot_CreateFile(t *testing.T) {
+	err := root.CreateFile("/home/SeaStorage/", *NewFileInfo("test", 256, "hash", "key", make([]*Fragment, 0)))
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(root.Home.ToJson())
+}
+
+func TestRoot_DeleteFile(t *testing.T) {
+	err := root.DeleteFile("/home/SeaStorage/", "test")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(root.Home.ToJson())
+}
+
+func TestToBytesAndFromBytes(t *testing.T) {
+	data := root.Home.ToBytes()
+	t.Log(data)
+	test, err := DirectoryFromBytes(data)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(test.ToJson())
 }

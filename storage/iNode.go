@@ -3,8 +3,10 @@ package storage
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,9 +20,13 @@ type INode interface {
 	GetSize() uint
 	GetHash() string
 	ToBytes() []byte
+	ToJson() string
+	lock()
+	unlock()
 }
 
 type File struct {
+	mutex     sync.Mutex
 	Name      string
 	Size      uint
 	Hash      string
@@ -29,6 +35,7 @@ type File struct {
 }
 
 type Directory struct {
+	mutex  sync.Mutex
 	Name   string
 	Size   uint
 	Hash   string
@@ -72,6 +79,14 @@ func NewFragmentSea(publicKey string) *FragmentSea {
 	return &FragmentSea{PublicKey: publicKey, Weight: 0}
 }
 
+func (f *File) lock() {
+	f.mutex.Lock()
+}
+
+func (f *File) unlock() {
+	f.mutex.Unlock()
+}
+
 func (f *File) GetName() string {
 	return f.Name
 }
@@ -82,6 +97,14 @@ func (f *File) GetSize() uint {
 
 func (f *File) GetHash() string {
 	return f.Hash
+}
+
+func (d *Directory) lock() {
+	d.mutex.Lock()
+}
+
+func (d *Directory) unlock() {
+	d.mutex.Unlock()
 }
 
 func (d *Directory) GetName() string {
@@ -210,12 +233,14 @@ func (d *Directory) CreateDirectory(p string) (*Directory, error) {
 func (d *Directory) updateDirectorySize(p string) {
 	pathParams := strings.Split(p, "/")
 	d.Size = 0
+	d.lock()
+	defer d.unlock()
 	for i := 0; i < len(d.INodes); i++ {
 		switch d.INodes[i].(type) {
 		case *Directory:
 			if d.INodes[i].GetName() == pathParams[1] {
 				subPath := strings.Join(pathParams[2:], "/")
-				subPath = "/" + subPath + "/"
+				subPath = "/" + subPath
 				d.INodes[i].(*Directory).updateDirectorySize(subPath)
 			}
 			d.Size += d.INodes[i].GetSize()
@@ -231,6 +256,8 @@ func (d *Directory) UpdateName(p string, name string, newName string) error {
 	if err != nil {
 		return err
 	}
+	iNode.lock()
+	defer iNode.unlock()
 	switch iNode.(type) {
 	case *File:
 		iNode.(*File).Name = newName
@@ -241,39 +268,38 @@ func (d *Directory) UpdateName(p string, name string, newName string) error {
 }
 
 // Delete directory Key.
-func (d *Directory) DeleteDirectoryKey() map[string]uint {
-	operations := make(map[string]uint)
+func (d *Directory) DeleteDirectoryKey() map[string]int {
+	operations := make(map[string]int)
 	for _, iNode := range d.INodes {
 		switch iNode.(type) {
 		case *Directory:
 			for k, v := range iNode.(*Directory).DeleteDirectoryKey() {
-				operations[k] += v
+				operations[k] -= v
 			}
 		case *File:
 			file := iNode.(*File)
 			operations[file.KeyIndex]--
-		default:
 		}
 	}
 	return operations
 }
 
 // Delete iNode of the directory finding by the path.
-func (d *Directory) DeleteDirectory(p string, name string) (operations map[string]uint, err error) {
+func (d *Directory) DeleteDirectory(p string, name string) (operations map[string]int, err error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return nil, err
 	}
+	d.lock()
+	defer d.unlock()
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *Directory:
 			if dir.INodes[i].GetName() == name {
 				operations = dir.INodes[i].(*Directory).DeleteDirectoryKey()
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				d.updateDirectorySize(p)
 				return operations, nil
 			}
-		default:
 		}
 	}
 	return nil, errors.New("Path doesn't exists: " + p + name + "/")
@@ -290,8 +316,9 @@ func (d *Directory) CreateFile(p string, name string, size uint, hash string, ke
 			return errors.New("The same Name file or directory exists: " + p + name)
 		}
 	}
+	d.lock()
+	defer d.unlock()
 	dir.INodes = append(dir.INodes, NewFile(name, size, hash, keyHash, fragments))
-	d.updateDirectorySize(p)
 	return nil
 }
 
@@ -301,6 +328,8 @@ func (d *Directory) UpdateFileData(p string, name string, size uint, hash string
 	if err != nil {
 		return err
 	}
+	d.lock()
+	defer d.unlock()
 	file.Size = size
 	file.Hash = hash
 	file.Fragments = fragments
@@ -313,6 +342,8 @@ func (d *Directory) UpdateFileKey(p string, name string, keyHash string, hash st
 	if err != nil {
 		return operations, err
 	}
+	file.lock()
+	defer file.unlock()
 	operations[file.KeyIndex]--
 	file.KeyIndex = keyHash
 	file.Hash = hash
@@ -327,16 +358,16 @@ func (d *Directory) DeleteFile(p string, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	d.lock()
+	defer d.unlock()
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *File:
 			file := dir.INodes[i].(*File)
 			if file.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				d.updateDirectorySize(p)
 				return file.KeyIndex, nil
 			}
-		default:
 		}
 	}
 	return "", errors.New("File doesn't exists: " + p + name)
@@ -347,6 +378,8 @@ func (d Directory) AddSea(p string, name string, hash string, sea *FragmentSea) 
 	if err != nil {
 		return err
 	}
+	file.lock()
+	defer file.unlock()
 	for _, fragment := range file.Fragments {
 		if fragment.Hash == hash {
 			for _, s := range fragment.Seas {
@@ -398,4 +431,14 @@ func FileFromBytes(data []byte) (*File, error) {
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(f)
 	return f, err
+}
+
+func (d *Directory) ToJson() string {
+	data, _ := json.MarshalIndent(d, "", "\t")
+	return string(data)
+}
+
+func (f *File) ToJson() string {
+	data, _ := json.MarshalIndent(f, "", "\t")
+	return string(data)
 }
