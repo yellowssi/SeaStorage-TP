@@ -32,8 +32,8 @@ type Fragment struct {
 
 type Status struct {
 	Name       string
-	TotalSpace uint
-	FreeSpace  uint
+	TotalSpace int
+	FreeSpace  int
 	Operations []Operation
 	BasePath   string
 }
