@@ -218,7 +218,7 @@ func (root *Root) DeleteDirectory(p string, name string) error {
 	}
 	root.updateKeyUsed(operations)
 	root.Home.updateDirectorySize(p)
-	return errors.New("Path doesn't exists: " + p + name + "/")
+	return nil
 }
 
 func (root *Root) GetFile(p string, name string) (file FileInfo, err error) {

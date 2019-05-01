@@ -10,6 +10,11 @@ import (
 	"syscall"
 )
 
+const (
+	FamilyName string = "SeaStorage"
+	Version    string = "1.0.0"
+)
+
 type Opts struct {
 	Verbose []bool `short:"v" long:"verbose" description:"Increase verbosity"`
 	Connect string `short:"C" long:"connect" description:"Validator component endpoint to connect to" default:"tcp://localhost:4004"`
