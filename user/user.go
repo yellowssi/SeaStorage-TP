@@ -3,6 +3,7 @@ package user
 import (
 	"bytes"
 	"encoding/gob"
+	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
 	"time"
@@ -47,13 +48,10 @@ func NewOperation(owner, publicKey, path, name string, timestamp time.Time) *Ope
 	}
 }
 
-func NewOperationSignature(operation Operation, privateKey string) (*OperationSignature, error) {
+func NewOperationSignature(operation Operation, signer signing.Signer) *OperationSignature {
 	operationBytes := operation.ToBytes()
-	signature, err := crypto.Sign(privateKey, crypto.BytesToHex(operationBytes))
-	if err != nil {
-		return nil, err
-	}
-	return &OperationSignature{Operation: operation, Signature: crypto.BytesToHex(signature)}, nil
+	signature := signer.Sign(operationBytes)
+	return &OperationSignature{Operation: operation, Signature: crypto.BytesToHex(signature)}
 }
 
 func (u *User) JoinGroup(group string) bool {
