@@ -15,7 +15,7 @@ type User struct {
 }
 
 type Operation struct {
-	Owner     string
+	Address   string
 	PublicKey string
 	Path      string
 	Name      string
@@ -38,9 +38,9 @@ func GenerateUser() *User {
 	return NewUser(make([]string, 0), storage.GenerateRoot())
 }
 
-func NewOperation(owner, publicKey, path, name string, timestamp time.Time) *Operation {
+func NewOperation(address, publicKey, path, name string, timestamp time.Time) *Operation {
 	return &Operation{
-		Owner:     owner,
+		Address:   address,
 		PublicKey: publicKey,
 		Path:      path,
 		Name:      name,
