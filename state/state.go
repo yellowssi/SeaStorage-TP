@@ -49,6 +49,10 @@ func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 
 func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.User, error) {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
+	return sss.getUserByAddress(address)
+}
+
+func (sss *SeaStorageState) getUserByAddress(address string) (*user.User, error) {
 	userBytes, ok := sss.userCache[address]
 	if ok {
 		return user.UserFromBytes(userBytes)
@@ -97,6 +101,10 @@ func (sss *SeaStorageState) saveUser(u *user.User, address string) error {
 
 func (sss *SeaStorageState) GetGroup(groupName string) (*user.Group, error) {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
+	return sss.getGroupByAddress(address)
+}
+
+func (sss *SeaStorageState) getGroupByAddress(address string) (*user.Group, error) {
 	groupBytes, ok := sss.groupCache[address]
 	if ok {
 		return user.GroupFromBytes(groupBytes)
@@ -145,6 +153,10 @@ func (sss *SeaStorageState) saveGroup(g *user.Group, address string) error {
 
 func (sss *SeaStorageState) GetSea(seaName, publicKey string) (*sea.Sea, error) {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
+	return sss.getSeaByAddress(address)
+}
+
+func (sss *SeaStorageState) getSeaByAddress(address string) (*sea.Sea, error) {
 	seaBytes, ok := sss.seaCache[address]
 	if ok {
 		return sea.SeaFromBytes(seaBytes)
@@ -337,7 +349,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, sign u
 	if !sign.Verify() || sign.Operation.Timestamp.Add(deadlineTime).Before(time.Now()) {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
-	u, err := sss.GetUser(sign.Operation.Owner, sign.Operation.PublicKey)
+	u, err := sss.getUserByAddress(sign.Operation.Address)
 	if err != nil {
 		return err
 	}
