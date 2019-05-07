@@ -50,18 +50,18 @@ var (
 )
 
 type SeaStoragePayload struct {
-	Action    uint                    `default:"Unset(0)"`
-	Name      string                  `default:""`
-	PWD       string                  `default:"/"`
-	Target    string                  `default:""`
-	Target2   string                  `default:""`
-	Key       string                  `default:""`
-	FileInfo  storage.FileInfo        `default:"FileInfo{}"`
-	Hash      string                  `default:""`
-	Signature user.OperationSignature `default:"OperationSignature{}"`
+	Action    uint             `default:"Unset(0)"`
+	Name      string           `default:""`
+	PWD       string           `default:"/"`
+	Target    string           `default:""`
+	Target2   string           `default:""`
+	Key       string           `default:""`
+	FileInfo  storage.FileInfo `default:"FileInfo{}"`
+	Hash      string           `default:""`
+	Signature user.Operation   `default:"OperationSignature{}"`
 }
 
-func NewSeaStoragePayload(action uint, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, signature user.OperationSignature) *SeaStoragePayload {
+func NewSeaStoragePayload(action uint, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, signature user.Operation) *SeaStoragePayload {
 	return &SeaStoragePayload{
 		Action:    action,
 		Name:      name,
