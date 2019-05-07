@@ -16,7 +16,7 @@ func init() {
 func TestOperation(t *testing.T) {
 	o := NewOperation("address", "publicKey", "path", "name", "hash", *singer)
 	t.Log(o)
-	result := o.Verify(singer.GetPublicKey())
+	result := o.Verify()
 	t.Log("Verify result:", result)
 	data := o.ToBytes()
 	testOperation, err := OperationFromBytes(data)
