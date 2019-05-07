@@ -81,7 +81,7 @@ func (sss *SeaStorageState) CreateUser(username string, publicKey string) error 
 	if len(results[address]) > 0 {
 		return &processor.InvalidTransactionError{Msg: "user exists"}
 	}
-	return sss.saveUser(user.GenerateUser(), address)
+	return sss.saveUser(user.GenerateUser(publicKey), address)
 }
 
 func (sss *SeaStorageState) saveUser(u *user.User, address string) error {
@@ -341,21 +341,29 @@ func (sss *SeaStorageState) UserPublicKey(username, publicKey, key string) error
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, sign user.OperationSignature) error {
+func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, sign user.Operation) error {
 	s, err := sss.GetSea(seaName, publicKey)
 	if err != nil {
 		return err
 	}
-	if !sign.Verify() || sign.Operation.Timestamp.Add(deadlineTime).Before(time.Now()) {
+	timestamp := time.Unix(sign.Timestamp, 0)
+	if !sign.Verify() || timestamp.Add(deadlineTime).Before(time.Now()) {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
-	u, err := sss.getUserByAddress(sign.Operation.Address)
+	u, err := sss.getUserByAddress(sign.Address)
 	if err != nil {
 		return err
 	}
-	err = u.Root.AddSea(sign.Operation.Path, sign.Operation.Name, hash, storage.NewFragmentSea(publicKey))
+	if !u.VerifyPublicKey(sign.PublicKey) {
+		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+	}
+	err = u.Root.AddSea(sign.Path, sign.Name, hash, storage.NewFragmentSea(publicKey))
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
+	}
+	err = sss.saveUser(u, sign.Address)
+	if err != nil {
+		return err
 	}
 	s.Handles++
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)

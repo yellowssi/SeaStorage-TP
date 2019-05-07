@@ -6,52 +6,30 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
+	"strconv"
 	"time"
 )
 
 type User struct {
-	Groups []string
-	Root   *storage.Root
+	publicKey string
+	Groups    []string
+	Root      *storage.Root
 }
 
-type Operation struct {
-	Address   string
-	PublicKey string
-	Path      string
-	Name      string
-	Timestamp time.Time
-}
-
-type OperationSignature struct {
-	Operation Operation
-	Signature string
-}
-
-func NewUser(groups []string, root *storage.Root) *User {
+func NewUser(publicKey string, groups []string, root *storage.Root) *User {
 	return &User{
-		Groups: groups,
-		Root:   root,
+		publicKey: publicKey,
+		Groups:    groups,
+		Root:      root,
 	}
 }
 
-func GenerateUser() *User {
-	return NewUser(make([]string, 0), storage.GenerateRoot())
+func GenerateUser(publicKey string) *User {
+	return NewUser(publicKey, make([]string, 0), storage.GenerateRoot())
 }
 
-func NewOperation(address, publicKey, path, name string, timestamp time.Time) *Operation {
-	return &Operation{
-		Address:   address,
-		PublicKey: publicKey,
-		Path:      path,
-		Name:      name,
-		Timestamp: timestamp,
-	}
-}
-
-func NewOperationSignature(operation Operation, signer signing.Signer) *OperationSignature {
-	operationBytes := operation.ToBytes()
-	signature := signer.Sign(operationBytes)
-	return &OperationSignature{Operation: operation, Signature: crypto.BytesToHex(signature)}
+func (u *User) VerifyPublicKey(publicKey string) bool {
+	return publicKey == u.publicKey
 }
 
 func (u *User) JoinGroup(group string) bool {
@@ -98,17 +76,47 @@ func UserFromBytes(data []byte) (*User, error) {
 	return u, err
 }
 
-func (o Operation) ToBytes() []byte {
+type Operation struct {
+	Address   string
+	PublicKey string
+	Path      string
+	Name      string
+	Hash      string
+	Timestamp int64
+	Signature []byte
+}
+
+func NewOperation(address, publicKey, path, name, hash string, signer signing.Signer) *Operation {
+	timestamp := time.Now().Unix()
+	sign := signer.Sign(bytes.Join([][]byte{[]byte(address + publicKey + path + name + hash), []byte(strconv.Itoa(int(timestamp)))}, []byte{}))
+	return &Operation{
+		Address:   address,
+		PublicKey: publicKey,
+		Path:      path,
+		Name:      name,
+		Hash:      hash,
+		Timestamp: timestamp,
+		Signature: sign,
+	}
+}
+
+func (o *Operation) Verify() bool {
+	pub := signing.NewSecp256k1PublicKey(crypto.HexToBytes(o.PublicKey))
+	cont := signing.NewSecp256k1Context()
+	return cont.Verify(o.Signature, bytes.Join([][]byte{[]byte(o.Address + o.PublicKey + o.Path + o.Name + o.Hash), []byte(strconv.Itoa(int(o.Timestamp)))}, []byte{}), pub)
+}
+
+func (o *Operation) ToBytes() []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	_ = enc.Encode(o)
 	return buf.Bytes()
 }
 
-func (o Operation) ToHex() string {
-	return crypto.BytesToHex(o.ToBytes())
-}
-
-func (ops OperationSignature) Verify() bool {
-	return crypto.Verify(ops.Operation.PublicKey, ops.Signature, ops.Operation.ToHex())
+func OperationFromBytes(data []byte) (*Operation, error) {
+	buf := bytes.NewBuffer(data)
+	o := &Operation{}
+	dec := gob.NewDecoder(buf)
+	err := dec.Decode(o)
+	return o, err
 }

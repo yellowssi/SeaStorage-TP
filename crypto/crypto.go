@@ -99,29 +99,6 @@ func Encryption(publicKey, data string) ([]byte, error) {
 	return result, nil
 }
 
-func Verify(publicKey, sign, data string) bool {
-	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
-	if err != nil {
-		return false
-	}
-	signature, err := ellcurv.ParseSignature(HexToBytes(sign), ellcurv.S256())
-	if err != nil {
-		return false
-	}
-	hash := SHA512BytesFromHex(data)
-	return signature.Verify(hash, pub)
-}
-
-func Sign(privateKey, data string) ([]byte, error) {
-	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), HexToBytes(privateKey))
-	hash := SHA512BytesFromHex(data)
-	signature, err := priv.Sign(hash)
-	if err != nil {
-		return nil, err
-	}
-	return signature.Serialize(), nil
-}
-
 func Decryption(privateKey, data string) ([]byte, error) {
 	priv, _ := ellcurv.PrivKeyFromBytes(ellcurv.S256(), HexToBytes(privateKey))
 	result, err := ellcurv.Decrypt(priv, HexToBytes(data))
