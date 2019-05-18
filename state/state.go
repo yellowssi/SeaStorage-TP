@@ -49,7 +49,14 @@ func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 
 func (sss *SeaStorageState) GetUser(username string, publicKey string) (*user.User, error) {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
-	return sss.getUserByAddress(address)
+	u, err := sss.getUserByAddress(address)
+	if err != nil {
+		return nil, err
+	}
+	if u.PublicKey != publicKey {
+		return nil, &processor.InvalidTransactionError{Msg: "public key is invalid"}
+	}
+	return u, nil
 }
 
 func (sss *SeaStorageState) getUserByAddress(address string) (*user.User, error) {
@@ -153,7 +160,14 @@ func (sss *SeaStorageState) saveGroup(g *user.Group, address string) error {
 
 func (sss *SeaStorageState) GetSea(seaName, publicKey string) (*sea.Sea, error) {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
-	return sss.getSeaByAddress(address)
+	s, err := sss.getSeaByAddress(address)
+	if err != nil {
+		return nil, err
+	}
+	if s.PublicKey != publicKey {
+		return nil, &processor.InvalidTransactionError{Msg: "public key is invalid"}
+	}
+	return s, nil
 }
 
 func (sss *SeaStorageState) getSeaByAddress(address string) (*sea.Sea, error) {
@@ -185,7 +199,7 @@ func (sss *SeaStorageState) CreateSea(seaName, publicKey string) error {
 	if len(results[address]) > 0 {
 		return &processor.InvalidTransactionError{Msg: "sea exists"}
 	}
-	return sss.saveSea(sea.NewSea(), address)
+	return sss.saveSea(sea.NewSea(publicKey), address)
 }
 
 func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {

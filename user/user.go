@@ -11,14 +11,14 @@ import (
 )
 
 type User struct {
-	publicKey string
+	PublicKey string
 	Groups    []string
 	Root      *storage.Root
 }
 
 func NewUser(publicKey string, groups []string, root *storage.Root) *User {
 	return &User{
-		publicKey: publicKey,
+		PublicKey: publicKey,
 		Groups:    groups,
 		Root:      root,
 	}
@@ -29,7 +29,7 @@ func GenerateUser(publicKey string) *User {
 }
 
 func (u *User) VerifyPublicKey(publicKey string) bool {
-	return publicKey == u.publicKey
+	return publicKey == u.PublicKey
 }
 
 func (u *User) JoinGroup(group string) bool {

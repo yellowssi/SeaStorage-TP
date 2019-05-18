@@ -20,6 +20,7 @@ type Operation struct {
 }
 
 type Sea struct {
+	PublicKey  string
 	Handles    int
 	Operations []Operation
 }
@@ -47,8 +48,9 @@ func NewOperation(action int8, owner string, hash string, shared bool) *Operatio
 	}
 }
 
-func NewSea() *Sea {
+func NewSea(publicKey string) *Sea {
 	return &Sea{
+		PublicKey:  publicKey,
 		Handles:    0,
 		Operations: make([]Operation, 0),
 	}
