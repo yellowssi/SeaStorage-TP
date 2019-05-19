@@ -60,7 +60,7 @@ services:
           -k /etc/sawtooth/keys/validator.priv \
              sawtooth.poet.target_wait_time=5 \
              sawtooth.poet.initial_wait_time=25 \
-             sawtooth.publisher.max_batches_per_block=100 \
+             sawtooth.publisher.max_batches_per_block=1.0.4 \
           -o poet-settings.batch && \
         sawadm genesis \
           config-genesis.batch config.batch poet.batch poet-settings.batch && \
@@ -265,7 +265,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-0:
-    image: yellowsea/seastorage-tp:1.0
+    image: yellowsea/seastorage-tp:1.0.4
     container_name: seastorage-tp-0
     expose:
       - 4004
@@ -273,7 +273,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-1:
-    image: yellowsea/seastorage-tp:1.0
+    image: yellowsea/seastorage-tp:1.0.4
     container_name: seastorage-tp-1
     expose:
       - 4004
@@ -281,7 +281,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-2:
-    image: yellowsea/seastorage-tp:1.0
+    image: yellowsea/seastorage-tp:1.0.4
     container_name: seastorage-tp-2
     expose:
       - 4004
@@ -289,7 +289,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-3:
-    image: yellowsea/seastorage-tp:1.0
+    image: yellowsea/seastorage-tp:1.0.4
     container_name: seastorage-tp-3
     expose:
       - 4004
