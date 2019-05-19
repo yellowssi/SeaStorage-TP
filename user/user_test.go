@@ -14,7 +14,7 @@ func init() {
 }
 
 func TestOperation(t *testing.T) {
-	o := NewOperation("address", "PublicKey", "path", "name", "hash", *singer)
+	o := NewOperation("address", "PublicKey", "path", "name", "hash", 10, *singer)
 	t.Log(o)
 	result := o.Verify()
 	t.Log("Verify result:", result)

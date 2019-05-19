@@ -81,12 +81,13 @@ type Operation struct {
 	PublicKey string
 	Path      string
 	Name      string
+	Size      int64
 	Hash      string
 	Timestamp int64
 	Signature []byte
 }
 
-func NewOperation(address, publicKey, path, name, hash string, signer signing.Signer) *Operation {
+func NewOperation(address, publicKey, path, name, hash string, size int64, signer signing.Signer) *Operation {
 	timestamp := time.Now().Unix()
 	sign := signer.Sign(bytes.Join([][]byte{[]byte(address + publicKey + path + name + hash), []byte(strconv.Itoa(int(timestamp)))}, []byte{}))
 	return &Operation{
@@ -94,6 +95,7 @@ func NewOperation(address, publicKey, path, name, hash string, signer signing.Si
 		PublicKey: publicKey,
 		Path:      path,
 		Name:      name,
+		Size:      size,
 		Hash:      hash,
 		Timestamp: timestamp,
 		Signature: sign,
