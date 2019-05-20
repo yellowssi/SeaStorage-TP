@@ -44,6 +44,7 @@ type Directory struct {
 
 type Fragment struct {
 	Hash string
+	Size int64
 	Seas []*FragmentSea
 }
 
