@@ -20,7 +20,7 @@ type Root struct {
 
 type FileInfo struct {
 	Name      string
-	Size      int
+	Size      int64
 	Hash      string
 	Key       string
 	Fragments []*Fragment
@@ -33,7 +33,7 @@ func NewRoot(home *Directory, keys map[string]*FileKey) *Root {
 	}
 }
 
-func NewFileInfo(name string, size int, hash string, key string, fragments []*Fragment) *FileInfo {
+func NewFileInfo(name string, size int64, hash string, key string, fragments []*Fragment) *FileInfo {
 	return &FileInfo{
 		Name:      name,
 		Size:      size,

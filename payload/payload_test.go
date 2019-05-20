@@ -7,12 +7,12 @@ import (
 )
 
 func TestSeaStoragePayload_ToBytes(t *testing.T) {
-	pl := NewSeaStoragePayload(CreateUser, "Test", "", "", "", "", storage.FileInfo{}, "", user.OperationSignature{})
+	pl := NewSeaStoragePayload(CreateUser, "Test", "", "", "", "", storage.FileInfo{}, "", user.Operation{})
 	t.Log(pl.ToBytes())
 }
 
 func TestSeaStoragePayloadFromBytes(t *testing.T) {
-	pl := NewSeaStoragePayload(CreateUser, "Test", "", "", "", "", storage.FileInfo{}, "", user.OperationSignature{})
+	pl := NewSeaStoragePayload(CreateUser, "Test", "", "", "", "", storage.FileInfo{}, "", user.Operation{})
 	data := pl.ToBytes()
 	t.Log(pl)
 	t.Log(SeaStoragePayloadFromBytes(data))

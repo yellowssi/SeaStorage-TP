@@ -17,7 +17,7 @@ type FileKey struct {
 
 type INode interface {
 	GetName() string
-	GetSize() int
+	GetSize() int64
 	GetHash() string
 	ToBytes() []byte
 	ToJson() string
@@ -28,7 +28,7 @@ type INode interface {
 type File struct {
 	mutex     sync.Mutex
 	Name      string
-	Size      int
+	Size      int64
 	Hash      string
 	KeyIndex  string
 	Fragments []*Fragment
@@ -37,7 +37,7 @@ type File struct {
 type Directory struct {
 	mutex  sync.Mutex
 	Name   string
-	Size   int
+	Size   int64
 	Hash   string
 	INodes []INode
 }
@@ -56,14 +56,14 @@ type FragmentSea struct {
 type INodeInfo struct {
 	IsDir bool
 	Name  string
-	Size  int
+	Size  int64
 }
 
 func NewFileKey(key string) *FileKey {
 	return &FileKey{Key: key, Used: 0}
 }
 
-func NewFile(name string, size int, hash string, key string, fragments []*Fragment) *File {
+func NewFile(name string, size int64, hash string, key string, fragments []*Fragment) *File {
 	return &File{Name: name, Size: size, Hash: hash, KeyIndex: key, Fragments: fragments}
 }
 
@@ -91,7 +91,7 @@ func (f *File) GetName() string {
 	return f.Name
 }
 
-func (f *File) GetSize() int {
+func (f *File) GetSize() int64 {
 	return f.Size
 }
 
@@ -111,7 +111,7 @@ func (d *Directory) GetName() string {
 	return d.Name
 }
 
-func (d *Directory) GetSize() int {
+func (d *Directory) GetSize() int64 {
 	return d.Size
 }
 
@@ -306,7 +306,7 @@ func (d *Directory) DeleteDirectory(p string, name string) (operations map[strin
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(p string, name string, size int, hash string, keyHash string, fragments []*Fragment) error {
+func (d *Directory) CreateFile(p string, name string, size int64, hash string, keyHash string, fragments []*Fragment) error {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return err
@@ -323,7 +323,7 @@ func (d *Directory) CreateFile(p string, name string, size int, hash string, key
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(p string, name string, size int, hash string, fragments []*Fragment) error {
+func (d *Directory) UpdateFileData(p string, name string, size int64, hash string, fragments []*Fragment) error {
 	file, err := d.checkFileExists(p, name)
 	if err != nil {
 		return err
