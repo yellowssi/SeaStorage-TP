@@ -45,6 +45,13 @@ services:
       - validator
     entrypoint: /root/go/bin/SeaStorage-TP -vv -C tcp://validator:4004
 
+  seastorage-sea:
+    image: yellowsea/seastorage-sea:1.0.4
+    container_name: seastorage-sea
+    depends_on:
+      - seastorage-tp
+    entrypoint: /root/go/bin/SeaStorage -d sea
+
   validator:
     image: hyperledger/sawtooth-validator:1.1
     container_name: sawtooth-validator-default
