@@ -84,7 +84,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	// Sea Action
 	case payload.SeaStoreFile:
-		return st.SeaStoreFile(pl.Name, user, pl.Hash, pl.Signature)
+		return st.SeaStoreFile(pl.Name, user, pl.Hash, pl.Operation)
 
 	default:
 		return &processor.InvalidTransactionError{Msg: fmt.Sprint("Invalid Action: ", pl.Action)}

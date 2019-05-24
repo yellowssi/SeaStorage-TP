@@ -5,16 +5,16 @@ import (
 	"testing"
 )
 
-var singer *signing.Signer
+var signer *signing.Signer
 
 func init() {
 	cont := signing.NewSecp256k1Context()
 	priv := cont.NewRandomPrivateKey()
-	singer = signing.NewCryptoFactory(cont).NewSigner(priv)
+	signer = signing.NewCryptoFactory(cont).NewSigner(priv)
 }
 
 func TestOperation(t *testing.T) {
-	o := NewOperation("address", "PublicKey", "path", "name", "hash", 10, *singer)
+	o := NewOperation("address", signer.GetPublicKey().AsHex(), "sea", "path", "name", "hash", 10, *signer)
 	t.Log(o)
 	result := o.Verify()
 	t.Log("Verify result:", result)

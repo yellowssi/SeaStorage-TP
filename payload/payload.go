@@ -58,10 +58,10 @@ type SeaStoragePayload struct {
 	Key       string           `default:""`
 	FileInfo  storage.FileInfo `default:"FileInfo{}"`
 	Hash      string           `default:""`
-	Signature user.Operation   `default:"OperationSignature{}"`
+	Operation user.Operation   `default:"Operation{}"`
 }
 
-func NewSeaStoragePayload(action uint, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, signature user.Operation) *SeaStoragePayload {
+func NewSeaStoragePayload(action uint, name string, PWD string, target string, target2 string, key string, fileInfo storage.FileInfo, hash string, operation user.Operation) *SeaStoragePayload {
 	return &SeaStoragePayload{
 		Action:    action,
 		Name:      name,
@@ -71,7 +71,7 @@ func NewSeaStoragePayload(action uint, name string, PWD string, target string, t
 		Key:       key,
 		FileInfo:  fileInfo,
 		Hash:      hash,
-		Signature: signature,
+		Operation: operation,
 	}
 }
 

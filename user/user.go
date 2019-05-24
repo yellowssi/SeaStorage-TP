@@ -2,6 +2,7 @@ package user
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
@@ -79,33 +80,39 @@ func UserFromBytes(data []byte) (*User, error) {
 type Operation struct {
 	Address   string
 	PublicKey string
+	Sea       string
 	Path      string
 	Name      string
 	Size      int64
 	Hash      string
 	Timestamp int64
-	Signature []byte
+	Signature string
 }
 
-func NewOperation(address, publicKey, path, name, hash string, size int64, signer signing.Signer) *Operation {
+func NewOperation(address, publicKey, sea, path, name, hash string, size int64, signer signing.Signer) *Operation {
 	timestamp := time.Now().Unix()
-	sign := signer.Sign(bytes.Join([][]byte{[]byte(address + publicKey + path + name + hash), []byte(strconv.Itoa(int(timestamp)))}, []byte{}))
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(size))
+	sign := signer.Sign(bytes.Join([][]byte{[]byte(address + publicKey + sea + path + name + hash), buf, []byte(strconv.Itoa(int(timestamp)))}, []byte{}))
 	return &Operation{
 		Address:   address,
 		PublicKey: publicKey,
+		Sea:       sea,
 		Path:      path,
 		Name:      name,
 		Size:      size,
 		Hash:      hash,
 		Timestamp: timestamp,
-		Signature: sign,
+		Signature: crypto.BytesToHex(sign),
 	}
 }
 
 func (o *Operation) Verify() bool {
 	pub := signing.NewSecp256k1PublicKey(crypto.HexToBytes(o.PublicKey))
 	cont := signing.NewSecp256k1Context()
-	return cont.Verify(o.Signature, bytes.Join([][]byte{[]byte(o.Address + o.PublicKey + o.Path + o.Name + o.Hash), []byte(strconv.Itoa(int(o.Timestamp)))}, []byte{}), pub)
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(o.Size))
+	return cont.Verify(crypto.HexToBytes(o.Signature), bytes.Join([][]byte{[]byte(o.Address + o.PublicKey + o.Sea + o.Path + o.Name + o.Hash), buf, []byte(strconv.Itoa(int(o.Timestamp)))}, []byte{}), pub)
 }
 
 func (o *Operation) ToBytes() []byte {
