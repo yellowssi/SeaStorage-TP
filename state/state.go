@@ -13,8 +13,6 @@ import (
 
 type AddressType uint8
 
-var deadlineTime, _ = time.ParseDuration("3h")
-
 var (
 	AddressTypeUser   AddressType = 0
 	AddressTypeGroup  AddressType = 1
@@ -360,7 +358,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, operat
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
 	timestamp := time.Unix(operation.Timestamp, 0)
-	if !operation.Verify() || timestamp.Add(deadlineTime).Before(time.Now()) {
+	if !operation.Verify() || timestamp.Before(time.Now()) {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
 	s, err := sss.GetSea(seaName, publicKey)
