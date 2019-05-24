@@ -41,7 +41,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	}
 	st := state.NewSeaStorageState(context)
 
-	logger.Debugf("SeaStorage txn %v: user %v: payload: Name='%v', Action='%v'", request.Signature, user, pl.Name, pl.Action)
+	logger.Debugf("SeaStorage txn %v: user %v: payload: Name='%v', Action='%v', Target='%v'", request.Signature, user, pl.Name, pl.Action, pl.Target)
 
 	switch pl.Action {
 	// Base Action
