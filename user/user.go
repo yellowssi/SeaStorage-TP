@@ -8,7 +8,6 @@ import (
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
 	"strconv"
-	"time"
 )
 
 type User struct {
@@ -89,8 +88,7 @@ type Operation struct {
 	Signature string
 }
 
-func NewOperation(address, publicKey, sea, path, name, hash string, size int64, signer signing.Signer) *Operation {
-	timestamp := time.Now().Unix()
+func NewOperation(address, publicKey, sea, path, name, hash string, size, timestamp int64, signer signing.Signer) *Operation {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, uint64(size))
 	sign := signer.Sign(bytes.Join([][]byte{[]byte(address + publicKey + sea + path + name + hash), buf, []byte(strconv.Itoa(int(timestamp)))}, []byte{}))
