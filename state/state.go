@@ -353,7 +353,7 @@ func (sss *SeaStorageState) UserPublicKey(username, publicKey, key string) error
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, operation user.Operation) error {
+func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operation user.Operation) error {
 	if operation.Sea != publicKey {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
@@ -372,7 +372,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey, hash string, operat
 	if !u.VerifyPublicKey(operation.PublicKey) {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
-	err = u.Root.AddSea(operation.Path, operation.Name, hash, storage.NewFragmentSea(publicKey))
+	err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey))
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}

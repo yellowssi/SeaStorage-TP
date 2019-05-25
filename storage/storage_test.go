@@ -63,7 +63,15 @@ func TestRoot_GetDirectory(t *testing.T) {
 }
 
 func TestRoot_CreateFile(t *testing.T) {
-	err := root.CreateFile("/home/SeaStorage/", *NewFileInfo("test", 256, "hash", "key", make([]*Fragment, 0)))
+	err := root.CreateFile("/home/SeaStorage/", *NewFileInfo("test", 256, "hash", "key", []*Fragment{{Hash: "test", Size: 1}}))
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(root.Home.ToJson())
+}
+
+func TestRoot_AddSea(t *testing.T) {
+	err := root.AddSea("/home/SeaStorage/", "test", "test", &FragmentSea{})
 	if err != nil {
 		t.Error(err)
 	}
