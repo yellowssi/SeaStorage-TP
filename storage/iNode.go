@@ -77,7 +77,7 @@ func NewFragment(hash string, seas []*FragmentSea) *Fragment {
 }
 
 func NewFragmentSea(publicKey string) *FragmentSea {
-	return &FragmentSea{PublicKey: publicKey, Weight: 0}
+	return &FragmentSea{PublicKey: publicKey, Weight: 0, Timestamp: time.Now()}
 }
 
 func (f *File) lock() {

@@ -358,7 +358,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operation us
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
 	timestamp := time.Unix(operation.Timestamp, 0)
-	if !operation.Verify() || timestamp.Before(time.Now()) {
+	if !operation.Verify() || timestamp.After(time.Now()) {
 		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 	}
 	s, err := sss.GetSea(seaName, publicKey)
