@@ -362,7 +362,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if err != nil {
 		return err
 	}
-	cache := make(map[string][]byte)
+	userCache := make(map[string]*user.User)
 	for _, operation := range operations {
 		if operation.Sea != publicKey {
 			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
@@ -371,22 +371,29 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 		if !operation.Verify() || timestamp.Before(time.Now()) {
 			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 		}
-		u, err := sss.getUserByAddress(operation.Address)
-		if err != nil {
-			return err
+		u, ok := userCache[operation.Address]
+		if !ok {
+			u, err = sss.getUserByAddress(operation.Address)
+			if err != nil {
+				return err
+			}
+			userCache[operation.Address] = u
 		}
 		if !u.VerifyPublicKey(operation.PublicKey) {
 			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 		}
-		err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey))
+		err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey, timestamp))
 		if err != nil {
 			return &processor.InvalidTransactionError{Msg: err.Error()}
 		}
-		cache[operation.Address] = u.ToBytes()
 		s.Handles++
 	}
-	address := MakeAddress(AddressTypeSea, seaName, publicKey)
-	cache[address] = s.ToBytes()
+	seaAddress := MakeAddress(AddressTypeSea, seaName, publicKey)
+	cache := make(map[string][]byte)
+	cache[seaAddress] = s.ToBytes()
+	for address, u := range userCache {
+		cache[address] = u.ToBytes()
+	}
 	addresses, err := sss.context.SetState(cache)
 	if err != nil {
 		return err
@@ -394,6 +401,10 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to save data"}
 	}
+	for address, u := range userCache {
+		sss.userCache[address] = u.ToBytes()
+	}
+	sss.seaCache[seaAddress] = s.ToBytes()
 	return nil
 }
 
