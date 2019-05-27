@@ -362,6 +362,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if err != nil {
 		return err
 	}
+	cache := make(map[string][]byte)
 	for _, operation := range operations {
 		if operation.Sea != publicKey {
 			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
@@ -381,14 +382,19 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 		if err != nil {
 			return &processor.InvalidTransactionError{Msg: err.Error()}
 		}
-		err = sss.saveUser(u, operation.Address)
-		if err != nil {
-			return err
-		}
+		cache[operation.Address] = u.ToBytes()
 		s.Handles++
 	}
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
-	return sss.saveSea(s, address)
+	cache[address] = s.ToBytes()
+	addresses, err := sss.context.SetState(cache)
+	if err != nil {
+		return err
+	}
+	if len(addresses) != (len(operations) + 1) {
+		return &processor.InternalError{Msg: "failed to save data"}
+	}
+	return nil
 }
 
 func MakeAddress(addressType AddressType, name, publicKey string) string {
