@@ -391,7 +391,7 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if err != nil {
 		return err
 	}
-	if len(addresses) != (len(operations) + 1) {
+	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to save data"}
 	}
 	return nil
