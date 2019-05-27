@@ -91,17 +91,17 @@ func validInfo(p string, name string) error {
 	return nil
 }
 
-func (root *Root) SearchKey(key string, generate bool, creation bool) string {
+func (root *Root) SearchKey(key string, generate bool, used bool) string {
 	keyIndex := crypto.SHA512HexFromHex(key)
 	fileKey, ok := root.Keys[string(keyIndex)]
 	if ok {
-		if creation {
+		if used {
 			fileKey.Used++
 		}
 		return string(keyIndex)
 	} else if generate {
 		fileKey = NewFileKey(key)
-		if creation {
+		if used {
 			fileKey.Used++
 		}
 		root.Keys[string(keyIndex)] = fileKey
@@ -181,7 +181,7 @@ func (root *Root) PublicKey(publicKey string, key string) error {
 			return nil
 		}
 	}
-	return errors.New("Key error or not exists. ")
+	return errors.New("invalid key or not exists")
 }
 
 func (root *Root) DeleteFile(p string, name string) error {

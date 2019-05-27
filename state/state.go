@@ -14,18 +14,21 @@ import (
 type AddressType uint8
 
 var (
-	AddressTypeUser   AddressType = 0
-	AddressTypeGroup  AddressType = 1
-	AddressTypeSea    AddressType = 2
-	AddressTypeShared AddressType = 3
+	AddressTypeUser        AddressType = 0
+	AddressTypeGroup       AddressType = 1
+	AddressTypeSea         AddressType = 2
+	AddressTypeUserShared  AddressType = 3
+	AddressTypeGroupShared AddressType = 4
 )
 
 var (
-	Namespace       = crypto.SHA512HexFromBytes([]byte("SeaStorage"))[:6]
-	UserNamespace   = crypto.SHA256HexFromBytes([]byte("User"))[:4]
-	GroupNamespace  = crypto.SHA256HexFromBytes([]byte("Group"))[:4]
-	SeaNamespace    = crypto.SHA256HexFromBytes([]byte("Sea"))[:4]
-	SharedNamespace = crypto.SHA256HexFromBytes([]byte("Shared"))[:4]
+	Namespace           = crypto.SHA512HexFromBytes([]byte("SeaStorage"))[:6]
+	UserNamespace       = crypto.SHA256HexFromBytes([]byte("User"))[:4]
+	GroupNamespace      = crypto.SHA256HexFromBytes([]byte("Group"))[:4]
+	SeaNamespace        = crypto.SHA256HexFromBytes([]byte("Sea"))[:4]
+	SharedNamespace     = crypto.SHA256HexFromBytes([]byte("Shared"))[:4]
+	UserShareNamespace  = crypto.BytesToHex(bytesOr(crypto.HexToBytes(SharedNamespace), crypto.HexToBytes(UserNamespace)))
+	GroupShareNamespace = crypto.BytesToHex(bytesOr(crypto.HexToBytes(SharedNamespace), crypto.HexToBytes(GroupNamespace)))
 )
 
 type SeaStorageState struct {
@@ -38,10 +41,11 @@ type SeaStorageState struct {
 
 func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	return &SeaStorageState{
-		context:    context,
-		userCache:  make(map[string][]byte),
-		groupCache: make(map[string][]byte),
-		seaCache:   make(map[string][]byte),
+		context:     context,
+		userCache:   make(map[string][]byte),
+		groupCache:  make(map[string][]byte),
+		seaCache:    make(map[string][]byte),
+		sharedCache: make(map[string][]byte),
 	}
 }
 
@@ -228,7 +232,7 @@ func (sss *SeaStorageState) UserShareFile(username, publicKey, p, target string)
 	if err != nil {
 		return err
 	}
-	address := MakeAddress(AddressTypeShared, username, publicKey)
+	address := MakeAddress(AddressTypeUserShared, username, publicKey)
 	return sss.saveSharedFiles(dst.(storage.INode), address)
 }
 
@@ -393,9 +397,22 @@ func MakeAddress(addressType AddressType, name, publicKey string) string {
 		return Namespace + GroupNamespace + crypto.SHA512HexFromBytes([]byte(name))[:60]
 	case AddressTypeSea:
 		return Namespace + SeaNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
-	case AddressTypeShared:
-		return Namespace + SharedNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
+	case AddressTypeUserShared:
+		return Namespace + UserShareNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
+	case AddressTypeGroupShared:
+		return Namespace + GroupShareNamespace + crypto.SHA512HexFromBytes([]byte(name))[:60]
 	default:
 		return ""
 	}
+}
+
+func bytesOr(a, b []byte) []byte {
+	if len(a) != len(b) {
+		return nil
+	}
+	result := make([]byte, 0)
+	for i := range a {
+		result = append(result, a[i]|b[i])
+	}
+	return result
 }
