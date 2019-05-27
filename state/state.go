@@ -357,34 +357,36 @@ func (sss *SeaStorageState) UserPublicKey(username, publicKey, key string) error
 	return sss.saveUser(u, address)
 }
 
-func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operation user.Operation) error {
-	if operation.Sea != publicKey {
-		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
-	}
-	timestamp := time.Unix(operation.Timestamp, 0)
-	if !operation.Verify() || timestamp.Before(time.Now()) {
-		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
-	}
+func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations []user.Operation) error {
 	s, err := sss.GetSea(seaName, publicKey)
 	if err != nil {
 		return err
 	}
-	u, err := sss.getUserByAddress(operation.Address)
-	if err != nil {
-		return err
+	for _, operation := range operations {
+		if operation.Sea != publicKey {
+			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+		}
+		timestamp := time.Unix(operation.Timestamp, 0)
+		if !operation.Verify() || timestamp.Before(time.Now()) {
+			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+		}
+		u, err := sss.getUserByAddress(operation.Address)
+		if err != nil {
+			return err
+		}
+		if !u.VerifyPublicKey(operation.PublicKey) {
+			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+		}
+		err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey))
+		if err != nil {
+			return &processor.InvalidTransactionError{Msg: err.Error()}
+		}
+		err = sss.saveUser(u, operation.Address)
+		if err != nil {
+			return err
+		}
+		s.Handles++
 	}
-	if !u.VerifyPublicKey(operation.PublicKey) {
-		return &processor.InvalidTransactionError{Msg: "signature is invalid"}
-	}
-	err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey))
-	if err != nil {
-		return &processor.InvalidTransactionError{Msg: err.Error()}
-	}
-	err = sss.saveUser(u, operation.Address)
-	if err != nil {
-		return err
-	}
-	s.Handles++
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
 	return sss.saveSea(s, address)
 }
