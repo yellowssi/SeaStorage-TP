@@ -79,10 +79,11 @@ func TestRoot_AddSea(t *testing.T) {
 }
 
 func TestRoot_DeleteFile(t *testing.T) {
-	err := root.DeleteFile("/home/SeaStorage/", "test")
+	seaOperations, err := root.DeleteFile("/home/SeaStorage/", "test")
 	if err != nil {
 		t.Error(err)
 	}
+	t.Log(seaOperations)
 	t.Log(root.Home.ToJson())
 }
 
