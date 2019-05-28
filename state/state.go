@@ -284,12 +284,34 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 	if err != nil {
 		return err
 	}
-	err = u.Root.DeleteDirectory(p, target)
+	seaOperations, err := u.Root.DeleteDirectory(p, target)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
+	seaCache := make(map[string]*sea.Sea)
+	for seaAddr, operations := range seaOperations {
+		s, ok := seaCache[seaAddr]
+		if !ok {
+			s, err = sss.getSeaByAddress(seaAddr)
+			if err != nil {
+				return err
+			}
+		}
+		s.AddOperation(operations)
+	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
-	return sss.saveUser(u, address)
+	cache := map[string][]byte{address: u.ToBytes()}
+	for addr, s := range seaCache {
+		cache[addr] = s.ToBytes()
+	}
+	addresses, err := sss.context.SetState(cache)
+	if err != nil {
+		return err
+	}
+	if len(addresses) != len(cache) {
+		return &processor.InternalError{Msg: "failed to store info"}
+	}
+	return nil
 }
 
 func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string) error {
@@ -297,9 +319,44 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 	if err != nil {
 		return err
 	}
-	err = u.Root.DeleteFile(p, target)
+	seaOperations, err := u.Root.DeleteFile(p, target)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
+	}
+	seaCache := make(map[string]*sea.Sea)
+	for seaAddr, operations := range seaOperations {
+		s, ok := seaCache[seaAddr]
+		if !ok {
+			s, err = sss.getSeaByAddress(seaAddr)
+			if err != nil {
+				return err
+			}
+		}
+		s.AddOperation(operations)
+	}
+	address := MakeAddress(AddressTypeUser, username, publicKey)
+	cache := map[string][]byte{address: u.ToBytes()}
+	for addr, s := range seaCache {
+		cache[addr] = s.ToBytes()
+	}
+	addresses, err := sss.context.SetState(cache)
+	if err != nil {
+		return err
+	}
+	if len(addresses) != len(cache) {
+		return &processor.InternalError{Msg: "failed to store info"}
+	}
+	return nil
+}
+
+func (sss *SeaStorageState) UserMove(username, publicKey, p, name, newPath string) error {
+	u, err := sss.GetUser(username, publicKey)
+	if err != nil {
+		return err
+	}
+	err = u.Root.Move(p, name, newPath)
+	if err != nil {
+		return err
 	}
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	return sss.saveUser(u, address)
@@ -362,14 +419,15 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if err != nil {
 		return err
 	}
+	seaAddress := MakeAddress(AddressTypeSea, seaName, publicKey)
 	userCache := make(map[string]*user.User)
 	for _, operation := range operations {
 		if operation.Sea != publicKey {
-			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+			return &processor.InvalidTransactionError{Msg: "invalid operation"}
 		}
 		timestamp := time.Unix(operation.Timestamp, 0)
 		if !operation.Verify() || timestamp.Before(time.Now()) {
-			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
+			return &processor.InvalidTransactionError{Msg: "invalid operation"}
 		}
 		u, ok := userCache[operation.Address]
 		if !ok {
@@ -382,13 +440,12 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 		if !u.VerifyPublicKey(operation.PublicKey) {
 			return &processor.InvalidTransactionError{Msg: "signature is invalid"}
 		}
-		err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(publicKey, timestamp))
+		err = u.Root.AddSea(operation.Path, operation.Name, operation.Hash, storage.NewFragmentSea(seaAddress, publicKey, timestamp))
 		if err != nil {
 			return &processor.InvalidTransactionError{Msg: err.Error()}
 		}
 		s.Handles++
 	}
-	seaAddress := MakeAddress(AddressTypeSea, seaName, publicKey)
 	cache := make(map[string][]byte)
 	cache[seaAddress] = s.ToBytes()
 	for address, u := range userCache {
@@ -406,6 +463,16 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	}
 	sss.seaCache[seaAddress] = s.ToBytes()
 	return nil
+}
+
+func (sss *SeaStorageState) SeaDeleteFile(seaName, publicKey string, operations []sea.Operation) error {
+	s, err := sss.GetSea(seaName, publicKey)
+	if err != nil {
+		return err
+	}
+	s.RemoveOperations(operations)
+	address := MakeAddress(AddressTypeSea, seaName, publicKey)
+	return sss.saveSea(s, address)
 }
 
 func MakeAddress(addressType AddressType, name, publicKey string) string {

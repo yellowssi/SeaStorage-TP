@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
 	"testing"
+	"time"
 )
 
 var signer *signing.Signer
@@ -14,7 +15,7 @@ func init() {
 }
 
 func TestOperation(t *testing.T) {
-	o := NewOperation("address", signer.GetPublicKey().AsHex(), "sea", "path", "name", "hash", 10, *signer)
+	o := NewOperation("address", signer.GetPublicKey().AsHex(),"sea", "path", "name", "hash", true, 10, time.Now().Unix(), *signer)
 	t.Log(o)
 	result := o.Verify()
 	t.Log("Verify result:", result)

@@ -46,11 +46,20 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	switch pl.Action {
 	// Base Action
 	case payload.CreateUser:
-		return st.CreateUser(pl.Target, user)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "username is nil"}
+		}
+		return st.CreateUser(pl.Target[0], user)
 	case payload.CreateGroup:
-		return st.CreateGroup(pl.Target, state.MakeAddress(state.AddressTypeUser, pl.Name, user), pl.Key)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "group name is nil"}
+		}
+		return st.CreateGroup(pl.Target[0], state.MakeAddress(state.AddressTypeUser, pl.Name, user), pl.Key)
 	case payload.CreateSea:
-		return st.CreateSea(pl.Target, user)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "sea name is nil"}
+		}
+		return st.CreateSea(pl.Target[0], user)
 
 	// User Action
 	case payload.UserCreateDirectory:
@@ -58,11 +67,20 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case payload.UserCreateFile:
 		return st.UserCreateFile(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserDeleteDirectory:
-		return st.UserDeleteDirectory(pl.Name, user, pl.PWD, pl.Target)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "directory name is nil"}
+		}
+		return st.UserDeleteDirectory(pl.Name, user, pl.PWD, pl.Target[0])
 	case payload.UserDeleteFile:
-		return st.UserDeleteFile(pl.Name, user, pl.PWD, pl.Target)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "filename is nil"}
+		}
+		return st.UserDeleteFile(pl.Name, user, pl.PWD, pl.Target[0])
 	case payload.UserUpdateName:
-		return st.UserUpdateName(pl.Name, user, pl.PWD, pl.Target, pl.Target2)
+		if len(pl.Target) != 2 || pl.Target[0] == "" || pl.Target[1] == "" {
+			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}
+		}
+		return st.UserUpdateName(pl.Name, user, pl.PWD, pl.Target[0], pl.Target[1])
 	case payload.UserUpdateFileData:
 		return st.UserUpdateFileData(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserUpdateFileKey:
@@ -84,7 +102,9 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 
 	// Sea Action
 	case payload.SeaStoreFile:
-		return st.SeaStoreFile(pl.Name, user, pl.Operations)
+		return st.SeaStoreFile(pl.Name, user, pl.UserOperations)
+	case payload.SeaDeleteFile:
+		return st.SeaDeleteFile(pl.Name, user, pl.SeaOperations)
 
 	default:
 		return &processor.InvalidTransactionError{Msg: fmt.Sprint("Invalid Action: ", pl.Action)}

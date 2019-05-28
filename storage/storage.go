@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
+	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"strings"
 )
 
@@ -79,7 +80,7 @@ func validName(name string) error {
 	return nil
 }
 
-func validInfo(p string, name string) error {
+func validInfo(p, name string) error {
 	err := validPath(p)
 	if err != nil {
 		return err
@@ -91,7 +92,7 @@ func validInfo(p string, name string) error {
 	return nil
 }
 
-func (root *Root) SearchKey(key string, generate bool, used bool) string {
+func (root *Root) SearchKey(key string, generate, used bool) string {
 	keyIndex := crypto.SHA512HexFromHex(key)
 	fileKey, ok := root.Keys[string(keyIndex)]
 	if ok {
@@ -129,7 +130,7 @@ func (root *Root) CreateFile(p string, info FileInfo) error {
 		return err
 	}
 	fileKeyIndex := root.SearchKey(info.Key, true, true)
-	err = root.Home.CreateFile(p, info.Name, info.Size, info.Hash, fileKeyIndex, info.Fragments)
+	err = root.Home.CreateFile(p, info.Name, info.Hash, fileKeyIndex, info.Size, info.Fragments)
 	if err != nil {
 		return err
 	}
@@ -137,7 +138,7 @@ func (root *Root) CreateFile(p string, info FileInfo) error {
 	return nil
 }
 
-func (root *Root) UpdateName(p string, name string, newName string) error {
+func (root *Root) UpdateName(p, name, newName string) error {
 	err := validInfo(p, name)
 	if err != nil {
 		return err
@@ -154,7 +155,7 @@ func (root *Root) UpdateFileData(p string, info FileInfo) error {
 	if err != nil {
 		return err
 	}
-	return root.Home.UpdateFileData(p, info.Name, info.Size, info.Hash, info.Fragments)
+	return root.Home.UpdateFileData(p, info.Name, info.Hash, info.Size, info.Fragments)
 }
 
 func (root *Root) UpdateFileKey(p string, info FileInfo) error {
@@ -171,7 +172,7 @@ func (root *Root) UpdateFileKey(p string, info FileInfo) error {
 	return nil
 }
 
-func (root *Root) PublicKey(publicKey string, key string) error {
+func (root *Root) PublicKey(publicKey, key string) error {
 	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
 	keyIndex := crypto.SHA512HexFromBytes(keyBytes)
 	target, ok := root.Keys[keyIndex]
@@ -184,18 +185,18 @@ func (root *Root) PublicKey(publicKey string, key string) error {
 	return errors.New("invalid key or not exists")
 }
 
-func (root *Root) DeleteFile(p string, name string) error {
+func (root *Root) DeleteFile(p, name string) (map[string][]sea.Operation, error) {
 	err := validInfo(p, name)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	keyIndex, err := root.Home.DeleteFile(p, name)
+	seaOperations, keyIndex, err := root.Home.DeleteFile(p, name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	root.updateKeyUsed(map[string]int{keyIndex: 1})
 	root.Home.updateDirectorySize(p)
-	return nil
+	return seaOperations, nil
 }
 
 func (root *Root) CreateDirectory(p string) error {
@@ -207,21 +208,33 @@ func (root *Root) CreateDirectory(p string) error {
 	return err
 }
 
-func (root *Root) DeleteDirectory(p string, name string) error {
+func (root *Root) DeleteDirectory(p, name string) (map[string][]sea.Operation, error) {
+	err := validInfo(p, name)
+	if err != nil {
+		return nil, err
+	}
+	seaOperations, keyUsed, err := root.Home.DeleteDirectory(p, name)
+	if err != nil {
+		return nil, err
+	}
+	root.updateKeyUsed(keyUsed)
+	root.Home.updateDirectorySize(p)
+	return seaOperations, nil
+}
+
+func (root *Root) Move(p, name, newPath string) error {
 	err := validInfo(p, name)
 	if err != nil {
 		return err
 	}
-	operations, err := root.Home.DeleteDirectory(p, name)
+	err = validPath(newPath)
 	if err != nil {
 		return err
 	}
-	root.updateKeyUsed(operations)
-	root.Home.updateDirectorySize(p)
-	return nil
+	return root.Move(p, name, newPath)
 }
 
-func (root *Root) GetFile(p string, name string) (file FileInfo, err error) {
+func (root *Root) GetFile(p, name string) (file FileInfo, err error) {
 	err = validInfo(p, name)
 	if err != nil {
 		return
@@ -242,7 +255,7 @@ func (root *Root) GetDirectory(p string) (dir *Directory, err error) {
 	return root.Home.checkPathExists(p)
 }
 
-func (root *Root) GetINode(p string, name string) (INode, error) {
+func (root *Root) GetINode(p, name string) (INode, error) {
 	return root.Home.checkINodeExists(p, name)
 }
 
@@ -254,7 +267,7 @@ func (root *Root) ListDirectory(p string) (iNodes []INodeInfo, err error) {
 	return root.Home.List(p)
 }
 
-func (root *Root) AddSea(p string, name string, hash string, sea *FragmentSea) error {
+func (root *Root) AddSea(p, name, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(p, name, hash, sea)
 }
 

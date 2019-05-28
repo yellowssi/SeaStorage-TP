@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"errors"
+	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ type INode interface {
 	GetName() string
 	GetSize() int64
 	GetHash() string
+	GenerateSeaOperations() map[string][]sea.Operation
 	ToBytes() []byte
 	ToJson() string
 	lock()
@@ -49,6 +51,7 @@ type Fragment struct {
 }
 
 type FragmentSea struct {
+	Address string
 	PublicKey string
 	Weight    int8
 	Timestamp time.Time
@@ -76,8 +79,8 @@ func NewFragment(hash string, seas []*FragmentSea) *Fragment {
 	return &Fragment{Hash: hash, Seas: seas}
 }
 
-func NewFragmentSea(publicKey string, timestamp time.Time) *FragmentSea {
-	return &FragmentSea{PublicKey: publicKey, Weight: 0, Timestamp: timestamp}
+func NewFragmentSea(address, publicKey string, timestamp time.Time) *FragmentSea {
+	return &FragmentSea{Address: address, PublicKey: publicKey, Weight: 0, Timestamp: timestamp}
 }
 
 func (f *File) lock() {
@@ -165,7 +168,7 @@ L:
 // Check the file whether exists in this Directory INode.
 // If exists, return the pointer of the File INode.
 // else, return the error.
-func (d *Directory) checkFileExists(p string, name string) (*File, error) {
+func (d *Directory) checkFileExists(p, name string) (*File, error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return nil, err
@@ -182,7 +185,7 @@ func (d *Directory) checkFileExists(p string, name string) (*File, error) {
 }
 
 // Check the file or directory whether exists in this Directory INode.
-func (d *Directory) checkINodeExists(p string, name string) (INode, error) {
+func (d *Directory) checkINodeExists(p, name string) (INode, error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return nil, err
@@ -252,7 +255,7 @@ func (d *Directory) updateDirectorySize(p string) {
 }
 
 // Update the Name of directory finding by the path.
-func (d *Directory) UpdateName(p string, name string, newName string) error {
+func (d *Directory) UpdateName(p, name, newName string) error {
 	iNode, err := d.checkINodeExists(p, name)
 	if err != nil {
 		return err
@@ -286,28 +289,29 @@ func (d *Directory) DeleteDirectoryKey() map[string]int {
 }
 
 // Delete iNode of the directory finding by the path.
-func (d *Directory) DeleteDirectory(p string, name string) (operations map[string]int, err error) {
+func (d *Directory) DeleteDirectory(p, name string) (seaOperations map[string][]sea.Operation, keyUsed map[string]int, err error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	d.lock()
 	defer d.unlock()
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *Directory:
-			if dir.INodes[i].GetName() == name {
-				operations = dir.INodes[i].(*Directory).DeleteDirectoryKey()
+			target := dir.INodes[i].(*Directory)
+			if target.GetName() == name {
+				keyUsed = target.DeleteDirectoryKey()
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return operations, nil
+				return target.GenerateSeaOperations(), keyUsed, nil
 			}
 		}
 	}
-	return nil, errors.New("Path doesn't exists: " + p + name + "/")
+	return nil, nil, errors.New("Path doesn't exists: " + p + name + "/")
 }
 
 // Store the file into the path.
-func (d *Directory) CreateFile(p string, name string, size int64, hash string, keyHash string, fragments []*Fragment) error {
+func (d *Directory) CreateFile(p, name, hash, keyHash string, size int64, fragments []*Fragment) error {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return err
@@ -324,7 +328,7 @@ func (d *Directory) CreateFile(p string, name string, size int64, hash string, k
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(p string, name string, size int64, hash string, fragments []*Fragment) error {
+func (d *Directory) UpdateFileData(p, name, hash string, size int64, fragments []*Fragment) error {
 	file, err := d.checkFileExists(p, name)
 	if err != nil {
 		return err
@@ -338,7 +342,7 @@ func (d *Directory) UpdateFileData(p string, name string, size int64, hash strin
 }
 
 // Update the Key of file
-func (d *Directory) UpdateFileKey(p string, name string, keyHash string, hash string, fragments []*Fragment) (operations map[string]int, err error) {
+func (d *Directory) UpdateFileKey(p, name, keyHash, hash string, fragments []*Fragment) (operations map[string]int, err error) {
 	file, err := d.checkFileExists(p, name)
 	if err != nil {
 		return operations, err
@@ -354,27 +358,48 @@ func (d *Directory) UpdateFileKey(p string, name string, keyHash string, hash st
 }
 
 // Delete the file finding by the Name under the path.
-func (d *Directory) DeleteFile(p string, name string) (string, error) {
+func (d *Directory) DeleteFile(p, name string) (map[string][]sea.Operation, string, error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	d.lock()
 	defer d.unlock()
 	for i := 0; i < len(dir.INodes); i++ {
 		switch dir.INodes[i].(type) {
 		case *File:
-			file := dir.INodes[i].(*File)
-			if file.GetName() == name {
+			target := dir.INodes[i].(*File)
+			if target.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return file.KeyIndex, nil
+				return target.GenerateSeaOperations(), target.KeyIndex, nil
 			}
 		}
 	}
-	return "", errors.New("File doesn't exists: " + p + name)
+	return nil, "", errors.New("File doesn't exists: " + p + name)
 }
 
-func (d Directory) AddSea(p string, name string, hash string, sea *FragmentSea) error {
+// Move File or Directory to new path
+func (d *Directory) Move(p, name, newPath string) error {
+	dir, err := d.checkPathExists(p)
+	if err != nil {
+		return err
+	}
+	newDir, err := d.checkPathExists(newPath)
+	if err != nil {
+		return err
+	}
+	for i, iNode := range dir.INodes {
+		if iNode.GetName() == name {
+			newDir.INodes = append(newDir.INodes, iNode)
+			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("target doesn't exists: " + p + name)
+}
+
+// Add Fragment stored sea
+func (d Directory) AddSea(p, name, hash string, sea *FragmentSea) error {
 	file, err := d.checkFileExists(p, name)
 	if err != nil {
 		return err
@@ -402,6 +427,27 @@ func (d *Directory) List(p string) ([]INodeInfo, error) {
 		return nil, err
 	}
 	return generateINodeInfos(dir.INodes), nil
+}
+
+func (d *Directory) GenerateSeaOperations() map[string][]sea.Operation {
+	seaOperations := make(map[string][]sea.Operation)
+	for _, iNode := range d.INodes {
+		iNodeSeaOperations := iNode.GenerateSeaOperations()
+		for addr, operations := range iNodeSeaOperations {
+			seaOperations[addr] = append(seaOperations[addr], operations...)
+		}
+	}
+	return seaOperations
+}
+
+func (f *File) GenerateSeaOperations() map[string][]sea.Operation {
+	seaOperations := make(map[string][]sea.Operation)
+	for _, fragment := range f.Fragments {
+		for _, fragmentSea := range fragment.Seas {
+			seaOperations[fragmentSea.Address] = append(seaOperations[fragmentSea.Address], sea.Operation{Action:sea.OperationActionDelete, Hash:fragment.Hash})
+		}
+	}
+	return seaOperations
 }
 
 func (d *Directory) ToBytes() []byte {
