@@ -30,6 +30,8 @@ var (
 	UserUpdateFileData  uint = 15
 	UserUpdateFileKey   uint = 16
 	UserPublicKey       uint = 17
+	UserMove            uint = 18
+	UserShare           uint = 19
 )
 
 // Group action
@@ -46,8 +48,8 @@ var (
 
 // Sea Action
 var (
-	SeaStoreFile  uint = 30
-	SeaDeleteFile uint = 31
+	SeaStoreFile         uint = 30
+	SeaConfirmOperations uint = 31
 )
 
 type SeaStoragePayload struct {

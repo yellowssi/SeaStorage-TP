@@ -87,6 +87,11 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return st.UserUpdateFileKey(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserPublicKey:
 		return st.UserPublicKey(pl.Name, user, pl.Key)
+	case payload.UserMove:
+		if len(pl.Target) != 2 || pl.Target[0] == "" || pl.Target[1] == "" {
+			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}
+		}
+		return st.UserMove(pl.Name, user, pl.PWD, pl.Target[0], pl.Target[1])
 	// TODO: User Join Group & Search Group
 
 	// Group Action
@@ -103,8 +108,8 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	// Sea Action
 	case payload.SeaStoreFile:
 		return st.SeaStoreFile(pl.Name, user, pl.UserOperations)
-	case payload.SeaDeleteFile:
-		return st.SeaDeleteFile(pl.Name, user, pl.SeaOperations)
+	case payload.SeaConfirmOperations:
+		return st.SeaConfirmOperations(pl.Name, user, pl.SeaOperations)
 
 	default:
 		return &processor.InvalidTransactionError{Msg: fmt.Sprint("Invalid Action: ", pl.Action)}
