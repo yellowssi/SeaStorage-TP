@@ -188,7 +188,7 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 	if err != nil {
 		return err
 	}
-	err = u.Root.ShareFiles(p, target, dst, true)
+	_, err = u.Root.ShareFiles(p, target, dst, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}

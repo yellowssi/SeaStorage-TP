@@ -21,6 +21,7 @@ type INode interface {
 	GetSize() int64
 	GetHash() string
 	GenerateSeaOperations(action uint, shared bool) map[string][]sea.Operation
+	GetKeys() []string
 	ToBytes() []byte
 	ToJson() string
 	lock()
@@ -441,6 +442,27 @@ func (d *Directory) List(p string) ([]INodeInfo, error) {
 		return nil, err
 	}
 	return generateINodeInfos(dir.INodes), nil
+}
+
+func (d *Directory) GetKeys() []string {
+	keyIndexes := make([]string, 0)
+	for _, iNode := range d.INodes {
+		subKeyIndexes := iNode.GetKeys()
+	L:
+		for _, subKeyIndex := range subKeyIndexes {
+			for _, keyIndex := range keyIndexes {
+				if keyIndex == subKeyIndex {
+					continue L
+				}
+			}
+			keyIndexes = append(keyIndexes, subKeyIndex)
+		}
+	}
+	return keyIndexes
+}
+
+func (f *File) GetKeys() []string {
+	return []string{f.KeyIndex}
 }
 
 func (d *Directory) GenerateSeaOperations(action uint, shared bool) map[string][]sea.Operation {
