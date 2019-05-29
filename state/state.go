@@ -200,6 +200,7 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 			if err != nil {
 				return err
 			}
+			seaCache[seaAddr] = s
 		}
 		s.AddOperation(operations)
 	}
@@ -214,6 +215,10 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to store info"}
 	}
+	for addr, s := range seaCache {
+		sss.seaCache[addr] = s.ToBytes()
+	}
+	sss.userCache[address] = u.ToBytes()
 	return nil
 }
 
@@ -261,6 +266,7 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 			if err != nil {
 				return err
 			}
+			seaCache[seaAddr] = s
 		}
 		s.AddOperation(operations)
 	}
@@ -275,6 +281,10 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to store info"}
 	}
+	for addr, s := range seaCache {
+		sss.seaCache[addr] = s.ToBytes()
+	}
+	sss.userCache[address] = u.ToBytes()
 	return nil
 }
 
@@ -296,6 +306,7 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 			if err != nil {
 				return err
 			}
+			seaCache[seaAddr] = s
 		}
 		s.AddOperation(operations)
 	}
@@ -310,6 +321,10 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to store info"}
 	}
+	for addr, s := range seaCache {
+		sss.seaCache[addr] = s.ToBytes()
+	}
+	sss.userCache[address] = u.ToBytes()
 	return nil
 }
 
@@ -357,6 +372,7 @@ func (sss *SeaStorageState) UserUpdateFileData(username, publicKey, p string, in
 			if err != nil {
 				return err
 			}
+			seaCache[seaAddr] = s
 		}
 		s.AddOperation(operations)
 	}
@@ -371,7 +387,11 @@ func (sss *SeaStorageState) UserUpdateFileData(username, publicKey, p string, in
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to store info"}
 	}
-	return sss.saveUser(u, address)
+	for addr, s := range seaCache {
+		sss.seaCache[addr] = s.ToBytes()
+	}
+	sss.userCache[address] = u.ToBytes()
+	return nil
 }
 
 func (sss *SeaStorageState) UserUpdateFileKey(username, publicKey, p string, info storage.FileInfo) error {
@@ -472,15 +492,4 @@ func MakeAddress(addressType AddressType, name, publicKey string) string {
 	default:
 		return ""
 	}
-}
-
-func bytesOr(a, b []byte) []byte {
-	if len(a) != len(b) {
-		return nil
-	}
-	result := make([]byte, 0)
-	for i := range a {
-		result = append(result, a[i]|b[i])
-	}
-	return result
 }
