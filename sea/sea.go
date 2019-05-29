@@ -26,7 +26,7 @@ type Sea struct {
 	Handles    int
 	Operations struct {
 		sync.RWMutex
-		m map[string]Operation
+		M map[string]Operation
 	}
 }
 
@@ -45,8 +45,8 @@ func NewSea(publicKey string) *Sea {
 		Handles:   0,
 		Operations: struct {
 			sync.RWMutex
-			m map[string]Operation
-		}{m: make(map[string]Operation)},
+			M map[string]Operation
+		}{M: make(map[string]Operation)},
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *Sea) AddOperation(operations []*Operation) {
 	defer s.Operations.Unlock()
 	for _, operation := range operations {
 		hash := crypto.SHA256HexFromBytes(operation.ToBytes())
-		s.Operations.m[hash] = *operation
+		s.Operations.M[hash] = *operation
 	}
 }
 
@@ -64,7 +64,7 @@ func (s *Sea) RemoveOperations(operations []Operation) {
 	defer s.Operations.Unlock()
 	for _, operation := range operations {
 		hash := crypto.SHA256HexFromBytes(operation.ToBytes())
-		delete(s.Operations.m, hash)
+		delete(s.Operations.M, hash)
 	}
 }
 
