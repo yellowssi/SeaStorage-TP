@@ -306,19 +306,20 @@ func (root *Root) AddSea(p, name, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(p, name, hash, sea)
 }
 
-func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string]string, error) {
+func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string][]sea.Operation, map[string]string, error) {
 	iNode, err := root.GetINode(p, name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	target, err := copystructure.Copy(iNode)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	var seaOperations map[string][]sea.Operation
 	if userOrGroup {
-		iNode.GenerateSeaOperations(sea.ActionUserShared, true)
+		seaOperations = iNode.GenerateSeaOperations(sea.ActionUserShared, true)
 	} else {
-		iNode.GenerateSeaOperations(sea.ActionGroupShared, true)
+		seaOperations = iNode.GenerateSeaOperations(sea.ActionGroupShared, true)
 	}
 	destination, _ := root.Share.CreateDirectory(p)
 	destination.INodes = append(destination.INodes, target.(INode))
@@ -327,7 +328,7 @@ func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string]
 	for _, keyIndex := range keyIndexes {
 		keys[keyIndex] = root.Keys[keyIndex].Key
 	}
-	return keys, nil
+	return seaOperations, keys, nil
 }
 
 func (root *Root) ToBytes() []byte {

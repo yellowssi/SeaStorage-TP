@@ -188,11 +188,33 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 	if err != nil {
 		return err
 	}
-	_, err = u.Root.ShareFiles(p, target, dst, true)
+	seaOperations, _, err := u.Root.ShareFiles(p, target, dst, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	return sss.saveUser(u, address)
+	seaCache := make(map[string]*sea.Sea)
+	for seaAddr, operations := range seaOperations {
+		s, ok := seaCache[seaAddr]
+		if !ok {
+			s, err = sss.GetSea(seaAddr)
+			if err != nil {
+				return err
+			}
+		}
+		s.AddOperation(operations)
+	}
+	cache := map[string][]byte{address: u.ToBytes()}
+	for addr, s := range seaCache {
+		cache[addr] = s.ToBytes()
+	}
+	addresses, err := sss.context.SetState(cache)
+	if err != nil {
+		return err
+	}
+	if len(addresses) != len(cache) {
+		return &processor.InternalError{Msg: "failed to store info"}
+	}
+	return nil
 }
 
 func (sss *SeaStorageState) UserCreateDirectory(username, publicKey, p string) error {
