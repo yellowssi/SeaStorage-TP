@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
+	"sync"
 )
 
 var (
@@ -23,7 +24,10 @@ type Operation struct {
 type Sea struct {
 	PublicKey  string
 	Handles    int
-	Operations map[string]Operation
+	Operations struct {
+		sync.RWMutex
+		m map[string]Operation
+	}
 }
 
 func NewOperation(action uint, owner string, hash string, shared bool) *Operation {
@@ -37,23 +41,30 @@ func NewOperation(action uint, owner string, hash string, shared bool) *Operatio
 
 func NewSea(publicKey string) *Sea {
 	return &Sea{
-		PublicKey:  publicKey,
-		Handles:    0,
-		Operations: make(map[string]Operation),
+		PublicKey: publicKey,
+		Handles:   0,
+		Operations: struct {
+			sync.RWMutex
+			m map[string]Operation
+		}{m: make(map[string]Operation)},
 	}
 }
 
 func (s *Sea) AddOperation(operations []*Operation) {
+	s.Operations.Lock()
+	defer s.Operations.Unlock()
 	for _, operation := range operations {
 		hash := crypto.SHA256HexFromBytes(operation.ToBytes())
-		s.Operations[hash] = *operation
+		s.Operations.m[hash] = *operation
 	}
 }
 
 func (s *Sea) RemoveOperations(operations []Operation) {
+	s.Operations.Lock()
+	defer s.Operations.Unlock()
 	for _, operation := range operations {
 		hash := crypto.SHA256HexFromBytes(operation.ToBytes())
-		delete(s.Operations, hash)
+		delete(s.Operations.m, hash)
 	}
 }
 
