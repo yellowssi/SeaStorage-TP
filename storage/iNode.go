@@ -410,6 +410,7 @@ func (d *Directory) Move(p, name, newPath string) error {
 			return nil
 		}
 	}
+	d.updateDirectorySize("/")
 	return errors.New("target doesn't exists: " + p + name)
 }
 
