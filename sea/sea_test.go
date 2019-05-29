@@ -42,3 +42,12 @@ func TestSea_RemoveOperations(t *testing.T) {
 	}})
 	t.Log(s)
 }
+
+func TestSea_ToBytes(t *testing.T) {
+	data := s.ToBytes()
+	test, err := SeaFromBytes(data)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(test)
+}
