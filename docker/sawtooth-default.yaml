@@ -39,7 +39,7 @@ services:
     entrypoint: xo-tp-python -vv -C tcp://validator:4004
 
   seastorage-tp:
-    image: yellowsea/seastorage-tp:1.2.2
+    image: yellowsea/seastorage-tp:1.2.3
     container_name: seastorage-tp
     depends_on:
       - validator
