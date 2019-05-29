@@ -233,7 +233,7 @@ func (root *Root) Move(p, name, newPath string) error {
 	if err != nil {
 		return err
 	}
-	return root.Move(p, name, newPath)
+	return root.Home.Move(p, name, newPath)
 }
 
 func (root *Root) GetFile(p, name string) (file FileInfo, err error) {

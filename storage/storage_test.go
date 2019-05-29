@@ -96,3 +96,12 @@ func TestToBytesAndFromBytes(t *testing.T) {
 	}
 	t.Log(test.ToJson())
 }
+
+func TestRoot_Move(t *testing.T) {
+	root.CreateDirectory("/test1/")
+	root.CreateDirectory("/test2/")
+	err := root.Move("/", "test1", "/test2/")
+	if err != nil {
+		t.Error(err)
+	}
+}
