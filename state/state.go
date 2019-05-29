@@ -202,6 +202,9 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 			}
 			seaCache[seaAddr] = s
 		}
+		for _, operation := range operations {
+			operation.Owner = u.PublicKey
+		}
 		s.AddOperation(operations)
 	}
 	cache := map[string][]byte{address: u.ToBytes()}
@@ -268,6 +271,9 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 			}
 			seaCache[seaAddr] = s
 		}
+		for _, operation := range operations {
+			operation.Owner = u.PublicKey
+		}
 		s.AddOperation(operations)
 	}
 	cache := map[string][]byte{address: u.ToBytes()}
@@ -307,6 +313,9 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 				return err
 			}
 			seaCache[seaAddr] = s
+		}
+		for _, operation := range operations {
+			operation.Owner = u.PublicKey
 		}
 		s.AddOperation(operations)
 	}
@@ -373,6 +382,9 @@ func (sss *SeaStorageState) UserUpdateFileData(username, publicKey, p string, in
 				return err
 			}
 			seaCache[seaAddr] = s
+		}
+		for _, operation := range operations {
+			operation.Owner = u.PublicKey
 		}
 		s.AddOperation(operations)
 	}

@@ -153,7 +153,7 @@ func (root *Root) UpdateName(p, name, newName string) error {
 	return root.Home.UpdateName(p, name, newName)
 }
 
-func (root *Root) UpdateFileData(p string, info FileInfo, userOrGroup bool) (map[string][]sea.Operation, error) {
+func (root *Root) UpdateFileData(p string, info FileInfo, userOrGroup bool) (map[string][]*sea.Operation, error) {
 	err := validInfo(p, info.Name)
 	if err != nil {
 		return nil, err
@@ -188,7 +188,7 @@ func (root *Root) PublicKey(publicKey, key string) error {
 	return errors.New("invalid key or not exists")
 }
 
-func (root *Root) DeleteFile(p, name string, userOrGroup bool) (map[string][]sea.Operation, error) {
+func (root *Root) DeleteFile(p, name string, userOrGroup bool) (map[string][]*sea.Operation, error) {
 	err := validInfo(p, name)
 	if err != nil {
 		return nil, err
@@ -211,7 +211,7 @@ func (root *Root) CreateDirectory(p string) error {
 	return err
 }
 
-func (root *Root) DeleteDirectory(p, name string, userOrGroup bool) (map[string][]sea.Operation, error) {
+func (root *Root) DeleteDirectory(p, name string, userOrGroup bool) (map[string][]*sea.Operation, error) {
 	err := validInfo(p, name)
 	if err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ func (root *Root) AddSea(p, name, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(p, name, hash, sea)
 }
 
-func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string][]sea.Operation, map[string]string, error) {
+func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string][]*sea.Operation, map[string]string, error) {
 	iNode, err := root.GetINode(p, name)
 	if err != nil {
 		return nil, nil, err
@@ -316,7 +316,7 @@ func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string]
 	if err != nil {
 		return nil, nil, err
 	}
-	var seaOperations map[string][]sea.Operation
+	var seaOperations map[string][]*sea.Operation
 	if userOrGroup {
 		seaOperations = iNode.GenerateSeaOperations(sea.ActionUserShared, true)
 	} else {

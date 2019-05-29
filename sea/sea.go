@@ -43,10 +43,10 @@ func NewSea(publicKey string) *Sea {
 	}
 }
 
-func (s *Sea) AddOperation(operations []Operation) {
+func (s *Sea) AddOperation(operations []*Operation) {
 	for _, operation := range operations {
 		hash := crypto.SHA256HexFromBytes(operation.ToBytes())
-		s.Operations[hash] = operation
+		s.Operations[hash] = *operation
 	}
 }
 

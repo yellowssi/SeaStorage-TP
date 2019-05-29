@@ -9,7 +9,7 @@ func init() {
 }
 
 func TestSea_AddOperation(t *testing.T) {
-	s.AddOperation([]Operation{{
+	s.AddOperation([]*Operation{{
 		Action: ActionUserDelete,
 		Owner:  "test",
 		Hash:   "hash",
