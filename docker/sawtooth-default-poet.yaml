@@ -265,7 +265,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-0:
-    image: yellowsea/seastorage-tp:1.2.1
+    image: yellowsea/seastorage-tp:1.2.0
     container_name: seastorage-tp-0
     expose:
       - 4004
@@ -273,7 +273,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-1:
-    image: yellowsea/seastorage-tp:1.2.1
+    image: yellowsea/seastorage-tp:1.2.0
     container_name: seastorage-tp-1
     expose:
       - 4004
@@ -281,7 +281,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-2:
-    image: yellowsea/seastorage-tp:1.2.1
+    image: yellowsea/seastorage-tp:1.2.0
     container_name: seastorage-tp-2
     expose:
       - 4004
@@ -289,7 +289,7 @@ services:
     stop_signal: SIGKILL
 
   seastorage-tp-3:
-    image: yellowsea/seastorage-tp:1.2.1
+    image: yellowsea/seastorage-tp:1.2.0
     container_name: seastorage-tp-3
     expose:
       - 4004
