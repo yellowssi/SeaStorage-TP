@@ -3,7 +3,6 @@ package state
 import (
 	"bytes"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
-	"github.com/mitchellh/copystructure"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
@@ -14,38 +13,31 @@ import (
 type AddressType uint8
 
 var (
-	AddressTypeUser        AddressType = 0
-	AddressTypeGroup       AddressType = 1
-	AddressTypeSea         AddressType = 2
-	AddressTypeUserShared  AddressType = 3
-	AddressTypeGroupShared AddressType = 4
+	AddressTypeUser  AddressType = 0
+	AddressTypeGroup AddressType = 1
+	AddressTypeSea   AddressType = 2
 )
 
 var (
-	Namespace           = crypto.SHA512HexFromBytes([]byte("SeaStorage"))[:6]
-	UserNamespace       = crypto.SHA256HexFromBytes([]byte("User"))[:4]
-	GroupNamespace      = crypto.SHA256HexFromBytes([]byte("Group"))[:4]
-	SeaNamespace        = crypto.SHA256HexFromBytes([]byte("Sea"))[:4]
-	SharedNamespace     = crypto.SHA256HexFromBytes([]byte("Shared"))[:4]
-	UserShareNamespace  = crypto.BytesToHex(bytesOr(crypto.HexToBytes(SharedNamespace), crypto.HexToBytes(UserNamespace)))
-	GroupShareNamespace = crypto.BytesToHex(bytesOr(crypto.HexToBytes(SharedNamespace), crypto.HexToBytes(GroupNamespace)))
+	Namespace      = crypto.SHA512HexFromBytes([]byte("SeaStorage"))[:6]
+	UserNamespace  = crypto.SHA256HexFromBytes([]byte("User"))[:4]
+	GroupNamespace = crypto.SHA256HexFromBytes([]byte("Group"))[:4]
+	SeaNamespace   = crypto.SHA256HexFromBytes([]byte("Sea"))[:4]
 )
 
 type SeaStorageState struct {
-	context     *processor.Context
-	userCache   map[string][]byte
-	groupCache  map[string][]byte
-	seaCache    map[string][]byte
-	sharedCache map[string][]byte
+	context    *processor.Context
+	userCache  map[string][]byte
+	groupCache map[string][]byte
+	seaCache   map[string][]byte
 }
 
 func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	return &SeaStorageState{
-		context:     context,
-		userCache:   make(map[string][]byte),
-		groupCache:  make(map[string][]byte),
-		seaCache:    make(map[string][]byte),
-		sharedCache: make(map[string][]byte),
+		context:    context,
+		userCache:  make(map[string][]byte),
+		groupCache: make(map[string][]byte),
+		seaCache:   make(map[string][]byte),
 	}
 }
 
@@ -190,38 +182,17 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
 	return nil
 }
 
-func (sss *SeaStorageState) UserShareFile(username, publicKey, p, target string) error {
-	address := MakeAddress(AddressTypeUserShared, username, publicKey)
+func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst string) error {
+	address := MakeAddress(AddressTypeUser, username, publicKey)
 	u, err := sss.GetUser(address)
 	if err != nil {
 		return err
 	}
-	iNode, err := u.Root.GetINode(p, target)
+	err = u.Root.ShareFiles(p, target, dst, true)
 	if err != nil {
-		return err
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	dst, err := copystructure.Copy(iNode)
-	if err != nil {
-		return err
-	}
-	return sss.saveSharedFiles(dst.(storage.INode), address)
-}
-
-func (sss *SeaStorageState) saveSharedFiles(node storage.INode, address string) error {
-	// TODO: Judge Shared Files Exists (Target / Update)
-	nBytes := node.ToBytes()
-	addresses, err := sss.context.SetState(map[string][]byte{
-		address: nBytes,
-	})
-	if err != nil {
-		return err
-	}
-	if len(addresses) == 0 {
-		return &processor.InternalError{Msg: "No addresses in set response. "}
-	}
-	sss.sharedCache[address] = nBytes
-	// TODO: Add Event
-	return nil
+	return sss.saveUser(u, address)
 }
 
 func (sss *SeaStorageState) UserCreateDirectory(username, publicKey, p string) error {
@@ -256,7 +227,7 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 	if err != nil {
 		return err
 	}
-	seaOperations, err := u.Root.DeleteDirectory(p, target)
+	seaOperations, err := u.Root.DeleteDirectory(p, target, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
@@ -291,7 +262,7 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 	if err != nil {
 		return err
 	}
-	seaOperations, err := u.Root.DeleteFile(p, target)
+	seaOperations, err := u.Root.DeleteFile(p, target, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
@@ -352,9 +323,31 @@ func (sss *SeaStorageState) UserUpdateFileData(username, publicKey, p string, in
 	if err != nil {
 		return err
 	}
-	err = u.Root.UpdateFileData(p, info)
+	seaOperations, err := u.Root.UpdateFileData(p, info, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
+	}
+	seaCache := make(map[string]*sea.Sea)
+	for seaAddr, operations := range seaOperations {
+		s, ok := seaCache[seaAddr]
+		if !ok {
+			s, err = sss.GetSea(seaAddr)
+			if err != nil {
+				return err
+			}
+		}
+		s.AddOperation(operations)
+	}
+	cache := map[string][]byte{address: u.ToBytes()}
+	for addr, s := range seaCache {
+		cache[addr] = s.ToBytes()
+	}
+	addresses, err := sss.context.SetState(cache)
+	if err != nil {
+		return err
+	}
+	if len(addresses) != len(cache) {
+		return &processor.InternalError{Msg: "failed to store info"}
 	}
 	return sss.saveUser(u, address)
 }
@@ -454,10 +447,6 @@ func MakeAddress(addressType AddressType, name, publicKey string) string {
 		return Namespace + GroupNamespace + crypto.SHA512HexFromBytes([]byte(name))[:60]
 	case AddressTypeSea:
 		return Namespace + SeaNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
-	case AddressTypeUserShared:
-		return Namespace + UserShareNamespace + crypto.SHA512HexFromBytes(bytes.Join([][]byte{[]byte(name), crypto.HexToBytes(publicKey)}, []byte{}))[:60]
-	case AddressTypeGroupShared:
-		return Namespace + GroupShareNamespace + crypto.SHA512HexFromBytes([]byte(name))[:60]
 	default:
 		return ""
 	}

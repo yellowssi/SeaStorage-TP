@@ -20,7 +20,7 @@ type INode interface {
 	GetName() string
 	GetSize() int64
 	GetHash() string
-	GenerateSeaOperations() map[string][]sea.Operation
+	GenerateSeaOperations(action uint, shared bool) map[string][]sea.Operation
 	ToBytes() []byte
 	ToJson() string
 	lock()
@@ -51,7 +51,7 @@ type Fragment struct {
 }
 
 type FragmentSea struct {
-	Address string
+	Address   string
 	PublicKey string
 	Weight    int8
 	Timestamp time.Time
@@ -289,7 +289,7 @@ func (d *Directory) DeleteDirectoryKey() map[string]int {
 }
 
 // Delete iNode of the directory finding by the path.
-func (d *Directory) DeleteDirectory(p, name string) (seaOperations map[string][]sea.Operation, keyUsed map[string]int, err error) {
+func (d *Directory) DeleteDirectory(p, name string, userOrGroup, shared bool) (seaOperations map[string][]sea.Operation, keyUsed map[string]int, err error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return nil, nil, err
@@ -303,7 +303,11 @@ func (d *Directory) DeleteDirectory(p, name string) (seaOperations map[string][]
 			if target.GetName() == name {
 				keyUsed = target.DeleteDirectoryKey()
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return target.GenerateSeaOperations(), keyUsed, nil
+				if userOrGroup {
+					return target.GenerateSeaOperations(sea.ActionUserDelete, shared), keyUsed, nil
+				} else {
+					return target.GenerateSeaOperations(sea.ActionGroupDelete, shared), keyUsed, nil
+				}
 			}
 		}
 	}
@@ -328,37 +332,43 @@ func (d *Directory) CreateFile(p, name, hash, keyHash string, size int64, fragme
 }
 
 // Update the data of file finding by the filename and the path of file.
-func (d *Directory) UpdateFileData(p, name, hash string, size int64, fragments []*Fragment) error {
+func (d *Directory) UpdateFileData(p, name, hash string, size int64, fragments []*Fragment, userOrGroup, shared bool) (map[string][]sea.Operation, error) {
 	file, err := d.checkFileExists(p, name)
 	if err != nil {
-		return err
-	}
-	d.lock()
-	defer d.unlock()
-	file.Size = size
-	file.Hash = hash
-	file.Fragments = fragments
-	return nil
-}
-
-// Update the Key of file
-func (d *Directory) UpdateFileKey(p, name, keyHash, hash string, fragments []*Fragment) (operations map[string]int, err error) {
-	file, err := d.checkFileExists(p, name)
-	if err != nil {
-		return operations, err
+		return nil, err
 	}
 	file.lock()
 	defer file.unlock()
-	operations[file.KeyIndex]--
+	var seaOperations map[string][]sea.Operation
+	if userOrGroup {
+		seaOperations = file.GenerateSeaOperations(sea.ActionUserDelete, shared)
+	} else {
+		seaOperations = file.GenerateSeaOperations(sea.ActionGroupDelete, shared)
+	}
+	file.Size = size
+	file.Hash = hash
+	file.Fragments = fragments
+	return seaOperations, nil
+}
+
+// Update the Key of file
+func (d *Directory) UpdateFileKey(p, name, keyHash, hash string, fragments []*Fragment) (keyUsed map[string]int, err error) {
+	file, err := d.checkFileExists(p, name)
+	if err != nil {
+		return keyUsed, err
+	}
+	file.lock()
+	defer file.unlock()
+	keyUsed[file.KeyIndex]--
 	file.KeyIndex = keyHash
 	file.Hash = hash
 	file.Fragments = fragments
-	operations[keyHash]++
-	return operations, nil
+	keyUsed[keyHash]++
+	return keyUsed, nil
 }
 
 // Delete the file finding by the Name under the path.
-func (d *Directory) DeleteFile(p, name string) (map[string][]sea.Operation, string, error) {
+func (d *Directory) DeleteFile(p, name string, userOrGroup, shared bool) (map[string][]sea.Operation, string, error) {
 	dir, err := d.checkPathExists(p)
 	if err != nil {
 		return nil, "", err
@@ -371,7 +381,11 @@ func (d *Directory) DeleteFile(p, name string) (map[string][]sea.Operation, stri
 			target := dir.INodes[i].(*File)
 			if target.GetName() == name {
 				dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
-				return target.GenerateSeaOperations(), target.KeyIndex, nil
+				if userOrGroup {
+					return target.GenerateSeaOperations(sea.ActionUserDelete, shared), target.KeyIndex, nil
+				} else {
+					return target.GenerateSeaOperations(sea.ActionGroupDelete, shared), target.KeyIndex, nil
+				}
 			}
 		}
 	}
@@ -429,10 +443,10 @@ func (d *Directory) List(p string) ([]INodeInfo, error) {
 	return generateINodeInfos(dir.INodes), nil
 }
 
-func (d *Directory) GenerateSeaOperations() map[string][]sea.Operation {
+func (d *Directory) GenerateSeaOperations(action uint, shared bool) map[string][]sea.Operation {
 	seaOperations := make(map[string][]sea.Operation)
 	for _, iNode := range d.INodes {
-		iNodeSeaOperations := iNode.GenerateSeaOperations()
+		iNodeSeaOperations := iNode.GenerateSeaOperations(action, shared)
 		for addr, operations := range iNodeSeaOperations {
 			seaOperations[addr] = append(seaOperations[addr], operations...)
 		}
@@ -440,11 +454,11 @@ func (d *Directory) GenerateSeaOperations() map[string][]sea.Operation {
 	return seaOperations
 }
 
-func (f *File) GenerateSeaOperations() map[string][]sea.Operation {
+func (f *File) GenerateSeaOperations(action uint, shared bool) map[string][]sea.Operation {
 	seaOperations := make(map[string][]sea.Operation)
 	for _, fragment := range f.Fragments {
 		for _, fragmentSea := range fragment.Seas {
-			seaOperations[fragmentSea.Address] = append(seaOperations[fragmentSea.Address], sea.Operation{Action:sea.OperationActionDelete, Hash:fragment.Hash})
+			seaOperations[fragmentSea.Address] = append(seaOperations[fragmentSea.Address], sea.Operation{Action: action, Hash: fragment.Hash, Shared: shared})
 		}
 	}
 	return seaOperations

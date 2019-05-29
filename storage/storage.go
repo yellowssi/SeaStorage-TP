@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"github.com/mitchellh/copystructure"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
 	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"strings"
@@ -15,8 +16,9 @@ func init() {
 }
 
 type Root struct {
-	Home *Directory
-	Keys map[string]*FileKey
+	Home  *Directory
+	Share *Directory
+	Keys  map[string]*FileKey
 }
 
 type FileInfo struct {
@@ -150,12 +152,12 @@ func (root *Root) UpdateName(p, name, newName string) error {
 	return root.Home.UpdateName(p, name, newName)
 }
 
-func (root *Root) UpdateFileData(p string, info FileInfo) error {
+func (root *Root) UpdateFileData(p string, info FileInfo, userOrGroup bool) (map[string][]sea.Operation, error) {
 	err := validInfo(p, info.Name)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return root.Home.UpdateFileData(p, info.Name, info.Hash, info.Size, info.Fragments)
+	return root.Home.UpdateFileData(p, info.Name, info.Hash, info.Size, info.Fragments, userOrGroup, false)
 }
 
 func (root *Root) UpdateFileKey(p string, info FileInfo) error {
@@ -185,12 +187,12 @@ func (root *Root) PublicKey(publicKey, key string) error {
 	return errors.New("invalid key or not exists")
 }
 
-func (root *Root) DeleteFile(p, name string) (map[string][]sea.Operation, error) {
+func (root *Root) DeleteFile(p, name string, userOrGroup bool) (map[string][]sea.Operation, error) {
 	err := validInfo(p, name)
 	if err != nil {
 		return nil, err
 	}
-	seaOperations, keyIndex, err := root.Home.DeleteFile(p, name)
+	seaOperations, keyIndex, err := root.Home.DeleteFile(p, name, userOrGroup, false)
 	if err != nil {
 		return nil, err
 	}
@@ -208,12 +210,12 @@ func (root *Root) CreateDirectory(p string) error {
 	return err
 }
 
-func (root *Root) DeleteDirectory(p, name string) (map[string][]sea.Operation, error) {
+func (root *Root) DeleteDirectory(p, name string, userOrGroup bool) (map[string][]sea.Operation, error) {
 	err := validInfo(p, name)
 	if err != nil {
 		return nil, err
 	}
-	seaOperations, keyUsed, err := root.Home.DeleteDirectory(p, name)
+	seaOperations, keyUsed, err := root.Home.DeleteDirectory(p, name, userOrGroup, false)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +269,67 @@ func (root *Root) ListDirectory(p string) (iNodes []INodeInfo, err error) {
 	return root.Home.List(p)
 }
 
+func (root *Root) GetSharedFile(p, name string) (file FileInfo, err error) {
+	err = validInfo(p, name)
+	if err != nil {
+		return
+	}
+	f, err := root.Share.checkFileExists(p, name)
+	if err != nil {
+		return
+	}
+	key := root.Keys[f.KeyIndex]
+	return *NewFileInfo(f.Name, f.Size, f.Hash, key.Key, f.Fragments), nil
+}
+
+func (root *Root) GetSharedDirectory(p string) (dir *Directory, err error) {
+	err = validPath(p)
+	if err != nil {
+		return
+	}
+	return root.Share.checkPathExists(p)
+}
+
+func (root *Root) GetSharedINode(p, name string) (INode, error) {
+	return root.Share.checkINodeExists(p, name)
+}
+
+func (root *Root) ListSharedDirectory(p string) (iNodes []INodeInfo, err error) {
+	err = validPath(p)
+	if err != nil {
+		return
+	}
+	return root.Share.List(p)
+}
+
 func (root *Root) AddSea(p, name, hash string, sea *FragmentSea) error {
 	return root.Home.AddSea(p, name, hash, sea)
+}
+
+func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) error {
+	iNode, err := root.GetINode(p, name)
+	if err != nil {
+		return err
+	}
+	target, err := copystructure.Copy(iNode)
+	if err != nil {
+		return err
+	}
+	if userOrGroup {
+		iNode.GenerateSeaOperations(sea.ActionUserShared, true)
+	} else {
+		iNode.GenerateSeaOperations(sea.ActionGroupShared, true)
+	}
+	destination, _ := root.Share.CreateDirectory(p)
+	destination.INodes = append(destination.INodes, target.(INode))
+	return nil
+}
+
+func (root *Root) ToBytes() []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	_ = enc.Encode(root)
+	return buf.Bytes()
 }
 
 func RootFromBytes(data []byte) (*Root, error) {

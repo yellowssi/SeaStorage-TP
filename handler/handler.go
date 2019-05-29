@@ -92,6 +92,11 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}
 		}
 		return st.UserMove(pl.Name, user, pl.PWD, pl.Target[0], pl.Target[1])
+	case payload.UserShare:
+		if len(pl.Target) != 2 || pl.Target[0] == "" || pl.Target[1] == "" {
+			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}
+		}
+		return st.UserShareFiles(pl.Name, user, pl.PWD, pl.Target[0], pl.Target[1])
 	// TODO: User Join Group & Search Group
 
 	// Group Action

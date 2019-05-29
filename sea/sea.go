@@ -4,20 +4,20 @@ import (
 	"bytes"
 	"encoding/gob"
 	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
-	"time"
 )
 
 var (
-	OperationActionUpdate int8 = 1
-	OperationActionDelete int8 = 2
-	OperationActionShared int8 = 3
+	ActionUserDelete  uint = 1
+	ActionUserShared  uint = 2
+	ActionGroupDelete uint = 3
+	ActionGroupShared uint = 4
 )
 
 type Operation struct {
-	Action int8
-	Owner  string
-	Hash   string
-	Shared bool
+	Action uint   // delete or shared
+	Owner  string // owner public key
+	Hash   string // the hash of file or fragment
+	Shared bool   // whether target is shared file or owner file
 }
 
 type Sea struct {
@@ -26,21 +26,7 @@ type Sea struct {
 	Operations map[string]Operation
 }
 
-type Fragment struct {
-	Timestamp time.Time
-	Shared    bool
-	Data      []byte
-}
-
-type Status struct {
-	Name       string
-	TotalSpace int
-	FreeSpace  int
-	Operations []Operation
-	BasePath   string
-}
-
-func NewOperation(action int8, owner string, hash string, shared bool) *Operation {
+func NewOperation(action uint, owner string, hash string, shared bool) *Operation {
 	return &Operation{
 		Action: action,
 		Owner:  owner,
@@ -84,29 +70,6 @@ func SeaFromBytes(data []byte) (*Sea, error) {
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(s)
 	return s, err
-}
-
-func NewFragment(shared bool, data []byte) *Fragment {
-	return &Fragment{
-		Timestamp: time.Now(),
-		Shared:    shared,
-		Data:      data,
-	}
-}
-
-func (f Fragment) ToBytes() []byte {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	_ = enc.Encode(f)
-	return buf.Bytes()
-}
-
-func FragmentFromBytes(data []byte) (Fragment, error) {
-	fragment := Fragment{}
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err := dec.Decode(&fragment)
-	return fragment, err
 }
 
 func (o Operation) ToBytes() []byte {
