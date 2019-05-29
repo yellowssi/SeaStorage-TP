@@ -29,10 +29,11 @@ type FileInfo struct {
 	Fragments []*Fragment
 }
 
-func NewRoot(home *Directory, keys map[string]*FileKey) *Root {
+func NewRoot(home, share *Directory, keys map[string]*FileKey) *Root {
 	return &Root{
-		Home: home,
-		Keys: keys,
+		Home:  home,
+		Share: share,
+		Keys:  keys,
 	}
 }
 
@@ -47,7 +48,7 @@ func NewFileInfo(name string, size int64, hash string, key string, fragments []*
 }
 
 func GenerateRoot() *Root {
-	return NewRoot(NewDirectory("root"), make(map[string]*FileKey))
+	return NewRoot(NewDirectory("home"), NewDirectory("shared"), make(map[string]*FileKey))
 }
 
 // Check the path whether valid.
@@ -326,7 +327,9 @@ func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string]
 	var keys = make(map[string]string)
 	keyIndexes := iNode.GetKeys()
 	for _, keyIndex := range keyIndexes {
-		keys[keyIndex] = root.Keys[keyIndex].Key
+		fileKey := root.Keys[keyIndex]
+		fileKey.Used++
+		keys[keyIndex] = fileKey.Key
 	}
 	return seaOperations, keys, nil
 }

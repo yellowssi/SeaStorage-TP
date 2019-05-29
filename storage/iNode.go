@@ -403,12 +403,12 @@ func (d *Directory) Move(p, name, newPath string) error {
 	if err != nil {
 		return err
 	}
-	d.lock()
-	defer d.unlock()
 	for i, iNode := range dir.INodes {
 		if iNode.GetName() == name {
+			d.lock()
 			newDir.INodes = append(newDir.INodes, iNode)
 			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+			d.unlock()
 			dir.updateDirectorySize(p)
 			dir.updateDirectorySize(newPath)
 			return nil
@@ -451,16 +451,7 @@ func (d *Directory) List(p string) ([]INodeInfo, error) {
 func (d *Directory) GetKeys() []string {
 	keyIndexes := make([]string, 0)
 	for _, iNode := range d.INodes {
-		subKeyIndexes := iNode.GetKeys()
-	L:
-		for _, subKeyIndex := range subKeyIndexes {
-			for _, keyIndex := range keyIndexes {
-				if keyIndex == subKeyIndex {
-					continue L
-				}
-			}
-			keyIndexes = append(keyIndexes, subKeyIndex)
-		}
+		keyIndexes = append(keyIndexes, iNode.GetKeys()...)
 	}
 	return keyIndexes
 }
