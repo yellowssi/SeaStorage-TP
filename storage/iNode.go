@@ -403,14 +403,17 @@ func (d *Directory) Move(p, name, newPath string) error {
 	if err != nil {
 		return err
 	}
+	d.lock()
+	defer d.unlock()
 	for i, iNode := range dir.INodes {
 		if iNode.GetName() == name {
 			newDir.INodes = append(newDir.INodes, iNode)
 			dir.INodes = append(dir.INodes[:i], dir.INodes[i+1:]...)
+			dir.updateDirectorySize(p)
+			dir.updateDirectorySize(newPath)
 			return nil
 		}
 	}
-	d.updateDirectorySize("/")
 	return errors.New("target doesn't exists: " + p + name)
 }
 
