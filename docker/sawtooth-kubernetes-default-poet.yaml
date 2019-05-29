@@ -162,7 +162,7 @@ items:
               - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
           - name: seastorage-tp
-            image: yellowsea/seastorage-tp:1.2.1
+            image: yellowsea/seastorage-tp:1.2.2
             command:
               - bash
             args:
@@ -313,7 +313,7 @@ items:
               - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
           - name: seastorage-tp
-            image: yellowsea/seastorage-tp:1.2.1
+            image: yellowsea/seastorage-tp:1.2.2
             command:
               - bash
             args:
@@ -464,7 +464,7 @@ items:
               - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
           - name: seastorage-tp
-            image: yellowsea/seastorage-tp:1.2.1
+            image: yellowsea/seastorage-tp:1.2.2
             command:
               - bash
             args:
@@ -615,7 +615,7 @@ items:
               - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
           - name: seastorage-tp
-            image: yellowsea/seastorage-tp:1.2.1
+            image: yellowsea/seastorage-tp:1.2.2
             command:
               - bash
             args:
@@ -766,7 +766,7 @@ items:
               - "xo-tp-python -vv -C tcp://$HOSTNAME:4004"
 
           - name: seastorage-tp
-            image: yellowsea/seastorage-tp:1.2.1
+            image: yellowsea/seastorage-tp:1.2.2
             command:
               - bash
             args:
