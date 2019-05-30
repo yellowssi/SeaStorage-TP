@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	FamilyName string = "SeaStorage"
-	Version    string = "1.0.0"
+	FamilyName    string = "SeaStorage"
+	FamilyVersion string = "1.0.0"
 )
 
 type Opts struct {
+	Version bool   `short:"V" long:"version" description:"Display version"`
 	Verbose []bool `short:"v" long:"verbose" description:"Increase verbosity"`
 	Connect string `short:"C" long:"connect" description:"Validator component endpoint to connect to" default:"tcp://localhost:4004"`
 }
@@ -41,6 +42,12 @@ func main() {
 		os.Exit(2)
 	}
 
+	if opts.Version {
+		fmt.Println("SeaStorage Transaction Processor")
+		fmt.Println("Version: " + FamilyVersion)
+		os.Exit(0)
+	}
+
 	endpoint := opts.Connect
 
 	switch len(opts.Verbose) {
@@ -56,7 +63,7 @@ func main() {
 	logger.Debugf("verbose = %v\n", len(opts.Verbose))
 	logger.Debugf("endpoint = %v\n", endpoint)
 
-	hd := handler.NewSeaStorageHandler(FamilyName, []string{Version})
+	hd := handler.NewSeaStorageHandler(FamilyName, []string{FamilyVersion})
 	proc := processor.NewTransactionProcessor(endpoint)
 	proc.AddHandler(hd)
 	proc.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
