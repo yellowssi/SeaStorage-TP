@@ -29,7 +29,7 @@ var (
 	UserUpdateName      uint = 14
 	UserUpdateFileData  uint = 15
 	UserUpdateFileKey   uint = 16
-	UserPublicKey       uint = 17
+	UserPublishKey      uint = 17
 	UserMove            uint = 18
 	UserShare           uint = 19
 )
@@ -43,7 +43,7 @@ var (
 	GroupUpdateFileName  uint = 24
 	GroupUpdateFileData  uint = 25
 	GroupUpdateFileKey   uint = 26
-	GroupPublicKey       uint = 27
+	GroupPublishKey      uint = 27
 )
 
 // Sea Action

@@ -85,8 +85,8 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 		return st.UserUpdateFileData(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserUpdateFileKey:
 		return st.UserUpdateFileKey(pl.Name, user, pl.PWD, pl.FileInfo)
-	case payload.UserPublicKey:
-		return st.UserPublicKey(pl.Name, user, pl.Key)
+	case payload.UserPublishKey:
+		return st.UserPublishKey(pl.Name, user, pl.Key)
 	case payload.UserMove:
 		if len(pl.Target) != 2 || pl.Target[0] == "" || pl.Target[1] == "" {
 			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}
@@ -107,7 +107,7 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	//case payload.GroupUpdateFileName:
 	//case payload.GroupUpdateFileData:
 	//case payload.GroupUpdateFileKey:
-	//case payload.GroupPublicKey:
+	//case payload.GroupPublishKey:
 	// TODO: Invite User & Access User Join Group & Leave Member
 
 	// Sea Action

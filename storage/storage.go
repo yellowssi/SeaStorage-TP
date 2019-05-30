@@ -175,7 +175,7 @@ func (root *Root) UpdateFileKey(p string, info FileInfo) error {
 	return nil
 }
 
-func (root *Root) PublicKey(publicKey, key string) error {
+func (root *Root) PublishKey(publicKey, key string) error {
 	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
 	keyIndex := crypto.SHA512HexFromBytes(keyBytes)
 	target, ok := root.Keys[keyIndex]
