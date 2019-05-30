@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"testing"
+	"time"
 )
 
 var root = GenerateRoot()
@@ -71,18 +73,33 @@ func TestRoot_CreateFile(t *testing.T) {
 }
 
 func TestRoot_AddSea(t *testing.T) {
-	err := root.AddSea("/home/SeaStorage/", "test", "test", &FragmentSea{})
+	err := root.AddSea("/home/SeaStorage/", "test", "test", NewFragmentSea("address", "publicKey", time.Now()))
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log(root.Home.ToJson())
 }
 
-func TestRoot_DeleteFile(t *testing.T) {
-	err := root.DeleteFile("/home/SeaStorage/", "test")
+func TestRoot_GenerateSeaOperations(t *testing.T) {
+	t.Log(root.Home.GenerateSeaOperations(sea.ActionUserDelete, false))
+}
+
+func TestRoot_ShareFiles(t *testing.T) {
+	operations, keys, err := root.ShareFiles("/home/SeaStorage/", "test", "/", true)
 	if err != nil {
 		t.Error(err)
 	}
+	t.Log(operations)
+	t.Log(keys)
+	t.Log(root.Share.ToJson())
+}
+
+func TestRoot_DeleteFile(t *testing.T) {
+	seaOperations, err := root.DeleteFile("/home/SeaStorage/", "test", true)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(seaOperations)
 	t.Log(root.Home.ToJson())
 }
 
@@ -94,4 +111,13 @@ func TestToBytesAndFromBytes(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(test.ToJson())
+}
+
+func TestRoot_Move(t *testing.T) {
+	root.CreateDirectory("/test1/")
+	root.CreateDirectory("/test2/")
+	err := root.Move("/", "test1", "/test2/")
+	if err != nil {
+		t.Error(err)
+	}
 }

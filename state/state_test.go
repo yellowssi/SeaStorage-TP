@@ -33,7 +33,4 @@ func TestBytesOr(t *testing.T) {
 	t.Log(UserNamespace)
 	t.Log(GroupNamespace)
 	t.Log(SeaNamespace)
-	t.Log(SharedNamespace)
-	t.Log(UserShareNamespace)
-	t.Log(GroupShareNamespace)
 }

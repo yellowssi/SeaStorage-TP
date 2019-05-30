@@ -3,20 +3,20 @@ package sea
 import (
 	"bytes"
 	"encoding/gob"
-	"time"
 )
 
 var (
-	OperationActionUpdate int8 = 1
-	OperationActionDelete int8 = 2
-	OperationActionShared int8 = 3
+	ActionUserDelete  uint = 1
+	ActionUserShared  uint = 2
+	ActionGroupDelete uint = 3
+	ActionGroupShared uint = 4
 )
 
 type Operation struct {
-	Action int8
-	Owner  string
-	Hash   string
-	Shared bool
+	Action uint   // delete or shared
+	Owner  string // owner public key
+	Hash   string // the hash of file or fragment
+	Shared bool   // whether target is shared file or owner file
 }
 
 type Sea struct {
@@ -25,21 +25,7 @@ type Sea struct {
 	Operations []Operation
 }
 
-type Fragment struct {
-	Timestamp time.Time
-	Shared    bool
-	Data      []byte
-}
-
-type Status struct {
-	Name       string
-	TotalSpace int
-	FreeSpace  int
-	Operations []Operation
-	BasePath   string
-}
-
-func NewOperation(action int8, owner string, hash string, shared bool) *Operation {
+func NewOperation(action uint, owner string, hash string, shared bool) *Operation {
 	return &Operation{
 		Action: action,
 		Owner:  owner,
@@ -53,6 +39,23 @@ func NewSea(publicKey string) *Sea {
 		PublicKey:  publicKey,
 		Handles:    0,
 		Operations: make([]Operation, 0),
+	}
+}
+
+func (s *Sea) AddOperation(operations []*Operation) {
+	for _, operation := range operations {
+		s.Operations = append(s.Operations, *operation)
+	}
+}
+
+func (s *Sea) RemoveOperations(operations []Operation) {
+	for _, operation := range operations {
+		for i, seaOperation := range s.Operations {
+			if operation == seaOperation {
+				s.Operations = append(s.Operations[:i], s.Operations[i+1:]...)
+				break
+			}
+		}
 	}
 }
 
@@ -71,25 +74,17 @@ func SeaFromBytes(data []byte) (*Sea, error) {
 	return s, err
 }
 
-func NewFragment(shared bool, data []byte) *Fragment {
-	return &Fragment{
-		Timestamp: time.Now(),
-		Shared:    shared,
-		Data:      data,
-	}
-}
-
-func (f Fragment) ToBytes() []byte {
+func (o Operation) ToBytes() []byte {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	_ = enc.Encode(f)
+	_ = enc.Encode(o)
 	return buf.Bytes()
 }
 
-func FragmentFromBytes(data []byte) (Fragment, error) {
-	fragment := Fragment{}
-	buf := bytes.NewBuffer(data)
+func OperationFromBytes(data []byte) (Operation, error) {
+	operation := Operation{}
+	buf := bytes.NewReader(data)
 	dec := gob.NewDecoder(buf)
-	err := dec.Decode(&fragment)
-	return fragment, err
+	err := dec.Decode(&operation)
+	return operation, err
 }
