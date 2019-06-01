@@ -29,7 +29,7 @@ func init() {
 	gob.Register(&Directory{})
 }
 
-// Root store information of files and keys used to encryption.
+// Root store information of files and Keys used to encryption.
 // Store the information of private files in 'Home' directory.
 // Store the information of shared files in 'Shared' directory.
 type Root struct {

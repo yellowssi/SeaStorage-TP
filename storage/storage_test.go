@@ -121,3 +121,18 @@ func TestRoot_Move(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+var data []byte
+
+func TestRoot_ToBytes(t *testing.T) {
+	data = root.ToBytes()
+}
+
+func TestRootFromBytes(t *testing.T) {
+	test, err := RootFromBytes(data)
+	if err != nil {
+		t.Errorf("failed to unmarshal root: %v", err)
+	} else {
+		t.Log(test)
+	}
+}
