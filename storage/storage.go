@@ -19,8 +19,8 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/mitchellh/copystructure"
-	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
+	"github.com/yellowssi/SeaStorage-TP/crypto"
+	"github.com/yellowssi/SeaStorage-TP/sea"
 	"strings"
 )
 

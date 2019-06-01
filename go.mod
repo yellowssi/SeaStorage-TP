@@ -1,4 +1,4 @@
-module gitlab.com/SeaStorage/SeaStorage-TP
+module github.com/yellowssi/SeaStorage-TP
 
 go 1.12
 

@@ -17,10 +17,10 @@ package state
 import (
 	"bytes"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
-	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
-	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
-	"gitlab.com/SeaStorage/SeaStorage-TP/user"
+	"github.com/yellowssi/SeaStorage-TP/crypto"
+	"github.com/yellowssi/SeaStorage-TP/sea"
+	"github.com/yellowssi/SeaStorage-TP/storage"
+	"github.com/yellowssi/SeaStorage-TP/user"
 	"time"
 )
 

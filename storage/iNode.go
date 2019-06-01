@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
+	"github.com/yellowssi/SeaStorage-TP/sea"
 )
 
 type INode interface {

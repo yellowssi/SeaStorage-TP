@@ -19,9 +19,9 @@ import (
 	"encoding/gob"
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
-	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
-	"gitlab.com/SeaStorage/SeaStorage-TP/user"
+	"github.com/yellowssi/SeaStorage-TP/sea"
+	"github.com/yellowssi/SeaStorage-TP/storage"
+	"github.com/yellowssi/SeaStorage-TP/user"
 )
 
 const _ = proto.ProtoPackageIsVersion3

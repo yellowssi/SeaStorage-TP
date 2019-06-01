@@ -19,8 +19,8 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"github.com/hyperledger/sawtooth-sdk-go/signing"
-	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
-	"gitlab.com/SeaStorage/SeaStorage-TP/storage"
+	"github.com/yellowssi/SeaStorage-TP/crypto"
+	"github.com/yellowssi/SeaStorage-TP/storage"
 	"strconv"
 )
 

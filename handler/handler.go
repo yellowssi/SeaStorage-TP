@@ -19,8 +19,8 @@ import (
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/hyperledger/sawtooth-sdk-go/protobuf/processor_pb2"
-	"gitlab.com/SeaStorage/SeaStorage-TP/payload"
-	"gitlab.com/SeaStorage/SeaStorage-TP/state"
+	"github.com/yellowssi/SeaStorage-TP/payload"
+	"github.com/yellowssi/SeaStorage-TP/state"
 )
 
 var logger = logging.Get()

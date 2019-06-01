@@ -3,7 +3,7 @@ package storage
 import (
 	"errors"
 
-	"gitlab.com/SeaStorage/SeaStorage-TP/crypto"
+	"github.com/yellowssi/SeaStorage-TP/crypto"
 )
 
 // FileKey store the information of key used to encrypt file.

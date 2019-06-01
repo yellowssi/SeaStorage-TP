@@ -2,17 +2,18 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"syscall"
+
 	"github.com/hyperledger/sawtooth-sdk-go/logging"
 	"github.com/hyperledger/sawtooth-sdk-go/processor"
 	"github.com/jessevdk/go-flags"
-	"gitlab.com/SeaStorage/SeaStorage-TP/handler"
-	"os"
-	"syscall"
+	"github.com/yellowssi/SeaStorage-TP/handler"
 )
 
 const (
 	FamilyName    string = "SeaStorage"
-	FamilyVersion string = "1.0.1"
+	FamilyVersion string = "1.0.0"
 )
 
 type Opts struct {

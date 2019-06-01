@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
+	"github.com/yellowssi/SeaStorage-TP/sea"
 	"testing"
 	"time"
 )
