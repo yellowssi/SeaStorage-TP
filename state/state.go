@@ -1,3 +1,17 @@
+// Copyright © 2019 yellowsea <hh1271941291@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package state
 
 import (
@@ -182,32 +196,23 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
 	return nil
 }
 
-func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst string) error {
-	address := MakeAddress(AddressTypeUser, username, publicKey)
-	u, err := sss.GetUser(address)
-	if err != nil {
-		return err
-	}
-	seaOperations, _, err := u.Root.ShareFiles(p, target, dst, true)
-	if err != nil {
-		return &processor.InvalidTransactionError{Msg: err.Error()}
-	}
+func (sss *SeaStorageState) saveSeaOperations(address, publicKey string, data []byte, seaOperations map[string][]*sea.Operation) error {
 	seaCache := make(map[string]*sea.Sea)
 	for seaAddr, operations := range seaOperations {
 		s, ok := seaCache[seaAddr]
 		if !ok {
-			s, err = sss.GetSea(seaAddr)
+			s, err := sss.GetSea(seaAddr)
 			if err != nil {
 				return err
 			}
 			seaCache[seaAddr] = s
 		}
 		for _, operation := range operations {
-			operation.Owner = u.PublicKey
+			operation.Owner = publicKey
 		}
 		s.AddOperation(operations)
 	}
-	cache := map[string][]byte{address: u.ToBytes()}
+	cache := map[string][]byte{address: data}
 	for addr, s := range seaCache {
 		cache[addr] = s.ToBytes()
 	}
@@ -221,8 +226,21 @@ func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst s
 	for addr, s := range seaCache {
 		sss.seaCache[addr] = s.ToBytes()
 	}
-	sss.userCache[address] = u.ToBytes()
+	sss.userCache[address] = data
 	return nil
+}
+
+func (sss *SeaStorageState) UserShareFiles(username, publicKey, p, target, dst string) error {
+	address := MakeAddress(AddressTypeUser, username, publicKey)
+	u, err := sss.GetUser(address)
+	if err != nil {
+		return err
+	}
+	seaOperations, _, err := u.Root.ShareFiles(p, target, dst, true)
+	if err != nil {
+		return &processor.InvalidTransactionError{Msg: err.Error()}
+	}
+	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
 func (sss *SeaStorageState) UserCreateDirectory(username, publicKey, p string) error {
@@ -261,37 +279,7 @@ func (sss *SeaStorageState) UserDeleteDirectory(username, publicKey, p, target s
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	seaCache := make(map[string]*sea.Sea)
-	for seaAddr, operations := range seaOperations {
-		s, ok := seaCache[seaAddr]
-		if !ok {
-			s, err = sss.GetSea(seaAddr)
-			if err != nil {
-				return err
-			}
-			seaCache[seaAddr] = s
-		}
-		for _, operation := range operations {
-			operation.Owner = u.PublicKey
-		}
-		s.AddOperation(operations)
-	}
-	cache := map[string][]byte{address: u.ToBytes()}
-	for addr, s := range seaCache {
-		cache[addr] = s.ToBytes()
-	}
-	addresses, err := sss.context.SetState(cache)
-	if err != nil {
-		return err
-	}
-	if len(addresses) != len(cache) {
-		return &processor.InternalError{Msg: "failed to store info"}
-	}
-	for addr, s := range seaCache {
-		sss.seaCache[addr] = s.ToBytes()
-	}
-	sss.userCache[address] = u.ToBytes()
-	return nil
+	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
 func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string) error {
@@ -304,37 +292,7 @@ func (sss *SeaStorageState) UserDeleteFile(username, publicKey, p, target string
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	seaCache := make(map[string]*sea.Sea)
-	for seaAddr, operations := range seaOperations {
-		s, ok := seaCache[seaAddr]
-		if !ok {
-			s, err = sss.GetSea(seaAddr)
-			if err != nil {
-				return err
-			}
-			seaCache[seaAddr] = s
-		}
-		for _, operation := range operations {
-			operation.Owner = u.PublicKey
-		}
-		s.AddOperation(operations)
-	}
-	cache := map[string][]byte{address: u.ToBytes()}
-	for addr, s := range seaCache {
-		cache[addr] = s.ToBytes()
-	}
-	addresses, err := sss.context.SetState(cache)
-	if err != nil {
-		return err
-	}
-	if len(addresses) != len(cache) {
-		return &processor.InternalError{Msg: "failed to store info"}
-	}
-	for addr, s := range seaCache {
-		sss.seaCache[addr] = s.ToBytes()
-	}
-	sss.userCache[address] = u.ToBytes()
-	return nil
+	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
 func (sss *SeaStorageState) UserMove(username, publicKey, p, name, newPath string) error {
@@ -373,37 +331,7 @@ func (sss *SeaStorageState) UserUpdateFileData(username, publicKey, p string, in
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	seaCache := make(map[string]*sea.Sea)
-	for seaAddr, operations := range seaOperations {
-		s, ok := seaCache[seaAddr]
-		if !ok {
-			s, err = sss.GetSea(seaAddr)
-			if err != nil {
-				return err
-			}
-			seaCache[seaAddr] = s
-		}
-		for _, operation := range operations {
-			operation.Owner = u.PublicKey
-		}
-		s.AddOperation(operations)
-	}
-	cache := map[string][]byte{address: u.ToBytes()}
-	for addr, s := range seaCache {
-		cache[addr] = s.ToBytes()
-	}
-	addresses, err := sss.context.SetState(cache)
-	if err != nil {
-		return err
-	}
-	if len(addresses) != len(cache) {
-		return &processor.InternalError{Msg: "failed to store info"}
-	}
-	for addr, s := range seaCache {
-		sss.seaCache[addr] = s.ToBytes()
-	}
-	sss.userCache[address] = u.ToBytes()
-	return nil
+	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
 func (sss *SeaStorageState) UserUpdateFileKey(username, publicKey, p string, info storage.FileInfo) error {
@@ -412,11 +340,11 @@ func (sss *SeaStorageState) UserUpdateFileKey(username, publicKey, p string, inf
 	if err != nil {
 		return err
 	}
-	err = u.Root.UpdateFileKey(p, info)
+	seaOperations, err := u.Root.UpdateFileKey(p, info, true)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
-	return sss.saveUser(u, address)
+	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
 func (sss *SeaStorageState) UserPublishKey(username, publicKey, key string) error {

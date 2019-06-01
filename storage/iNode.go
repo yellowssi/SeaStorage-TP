@@ -1,3 +1,17 @@
+// Copyright © 2019 yellowsea <hh1271941291@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -5,16 +19,12 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"errors"
-	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
 	"strings"
 	"sync"
 	"time"
-)
 
-type FileKey struct {
-	Used uint
-	Key  string
-}
+	"gitlab.com/SeaStorage/SeaStorage-TP/sea"
+)
 
 type INode interface {
 	GetName() string
@@ -62,10 +72,6 @@ type INodeInfo struct {
 	IsDir bool
 	Name  string
 	Size  int64
-}
-
-func NewFileKey(key string) *FileKey {
-	return &FileKey{Key: key, Used: 0}
 }
 
 func NewFile(name string, size int64, hash string, key string, fragments []*Fragment) *File {
@@ -340,6 +346,26 @@ func (d *Directory) UpdateFileData(p, name, hash string, size int64, fragments [
 	}
 	file.lock()
 	defer file.unlock()
+	return d.updateFileData(file, hash, size, fragments, userOrGroup, shared), nil
+}
+
+// Update the Key of file
+func (d *Directory) UpdateFileKey(p, name, keyIndex, hash string, size int64, fragments []*Fragment, userOrGroup, shared bool) (map[string]int, map[string][]*sea.Operation, error) {
+	file, err := d.checkFileExists(p, name)
+	if err != nil {
+		return nil, nil, err
+	}
+	file.lock()
+	defer file.unlock()
+	seaOperations := d.updateFileData(file, hash, size, fragments, userOrGroup, shared)
+	keyUsed := make(map[string]int)
+	keyUsed[file.KeyIndex]--
+	file.KeyIndex = keyIndex
+	keyUsed[keyIndex]++
+	return keyUsed, seaOperations, nil
+}
+
+func (d *Directory) updateFileData(file *File, hash string, size int64, fragments []*Fragment, userOrGroup, shared bool) map[string][]*sea.Operation {
 	var seaOperations map[string][]*sea.Operation
 	if userOrGroup {
 		seaOperations = file.GenerateSeaOperations(sea.ActionUserDelete, shared)
@@ -349,23 +375,7 @@ func (d *Directory) UpdateFileData(p, name, hash string, size int64, fragments [
 	file.Size = size
 	file.Hash = hash
 	file.Fragments = fragments
-	return seaOperations, nil
-}
-
-// Update the Key of file
-func (d *Directory) UpdateFileKey(p, name, keyHash, hash string, fragments []*Fragment) (keyUsed map[string]int, err error) {
-	file, err := d.checkFileExists(p, name)
-	if err != nil {
-		return keyUsed, err
-	}
-	file.lock()
-	defer file.unlock()
-	keyUsed[file.KeyIndex]--
-	file.KeyIndex = keyHash
-	file.Hash = hash
-	file.Fragments = fragments
-	keyUsed[keyHash]++
-	return keyUsed, nil
+	return seaOperations
 }
 
 // Delete the file finding by the Name under the path.

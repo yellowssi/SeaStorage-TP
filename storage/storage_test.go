@@ -91,7 +91,7 @@ func TestRoot_ShareFiles(t *testing.T) {
 	}
 	t.Log(operations)
 	t.Log(keys)
-	t.Log(root.Share.ToJson())
+	t.Log(root.Shared.ToJson())
 }
 
 func TestRoot_DeleteFile(t *testing.T) {
