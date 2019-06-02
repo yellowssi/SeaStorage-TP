@@ -13,7 +13,7 @@ import (
 
 const (
 	FamilyName    string = "SeaStorage"
-	FamilyVersion string = "1.0"
+	FamilyVersion string = "1.0.0"
 )
 
 type Opts struct {
