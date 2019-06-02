@@ -40,32 +40,21 @@ var (
 )
 
 type SeaStorageState struct {
-	context    *processor.Context
-	userCache  map[string][]byte
-	groupCache map[string][]byte
-	seaCache   map[string][]byte
+	context *processor.Context
 }
 
 func NewSeaStorageState(context *processor.Context) *SeaStorageState {
 	return &SeaStorageState{
-		context:    context,
-		userCache:  make(map[string][]byte),
-		groupCache: make(map[string][]byte),
-		seaCache:   make(map[string][]byte),
+		context: context,
 	}
 }
 
 func (sss *SeaStorageState) GetUser(address string) (*user.User, error) {
-	userBytes, ok := sss.userCache[address]
-	if ok {
-		return user.UserFromBytes(userBytes)
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return nil, err
 	}
 	if len(results[address]) > 0 {
-		sss.userCache[address] = results[address]
 		return user.UserFromBytes(results[address])
 	}
 	return nil, &processor.InvalidTransactionError{Msg: "user doesn't exists"}
@@ -73,10 +62,6 @@ func (sss *SeaStorageState) GetUser(address string) (*user.User, error) {
 
 func (sss *SeaStorageState) CreateUser(username string, publicKey string) error {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
-	_, ok := sss.userCache[address]
-	if ok {
-		return &processor.InvalidTransactionError{Msg: "user exists"}
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
@@ -98,21 +83,15 @@ func (sss *SeaStorageState) saveUser(u *user.User, address string) error {
 	if len(addresses) == 0 {
 		return &processor.InternalError{Msg: "No addresses in set response"}
 	}
-	sss.userCache[address] = uBytes
 	return nil
 }
 
 func (sss *SeaStorageState) GetGroup(address string) (*user.Group, error) {
-	groupBytes, ok := sss.groupCache[address]
-	if ok {
-		return user.GroupFromBytes(groupBytes)
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return nil, err
 	}
 	if len(results[address]) > 0 {
-		sss.seaCache[address] = results[address]
 		return user.GroupFromBytes(results[address])
 	}
 	return nil, &processor.InvalidTransactionError{Msg: "group doesn't exists"}
@@ -120,10 +99,6 @@ func (sss *SeaStorageState) GetGroup(address string) (*user.Group, error) {
 
 func (sss *SeaStorageState) CreateGroup(groupName, leader, key string) error {
 	address := MakeAddress(AddressTypeGroup, groupName, "")
-	_, ok := sss.groupCache[address]
-	if ok {
-		return &processor.InvalidTransactionError{Msg: "group exists"}
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
@@ -145,21 +120,15 @@ func (sss *SeaStorageState) saveGroup(g *user.Group, address string) error {
 	if len(addresses) > 0 {
 		return &processor.InternalError{Msg: "No addresses in set response"}
 	}
-	sss.groupCache[address] = gBytes
 	return nil
 }
 
 func (sss *SeaStorageState) GetSea(address string) (*sea.Sea, error) {
-	seaBytes, ok := sss.seaCache[address]
-	if ok {
-		return sea.SeaFromBytes(seaBytes)
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return nil, err
 	}
 	if len(results[address]) > 0 {
-		sss.seaCache[address] = results[address]
 		return sea.SeaFromBytes(results[address])
 	}
 	return nil, &processor.InvalidTransactionError{Msg: "sea doesn't exists"}
@@ -167,10 +136,6 @@ func (sss *SeaStorageState) GetSea(address string) (*sea.Sea, error) {
 
 func (sss *SeaStorageState) CreateSea(seaName, publicKey string) error {
 	address := MakeAddress(AddressTypeSea, seaName, publicKey)
-	_, ok := sss.seaCache[address]
-	if ok {
-		return &processor.InvalidTransactionError{Msg: "sea exists"}
-	}
 	results, err := sss.context.GetState([]string{address})
 	if err != nil {
 		return err
@@ -192,7 +157,6 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
 	if len(addresses) == 0 {
 		return &processor.InternalError{Msg: "No addresses in set response. "}
 	}
-	sss.seaCache[address] = sBytes
 	return nil
 }
 
@@ -223,10 +187,6 @@ func (sss *SeaStorageState) saveSeaOperations(address, publicKey string, data []
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to store info"}
 	}
-	for addr, s := range seaCache {
-		sss.seaCache[addr] = s.ToBytes()
-	}
-	sss.userCache[address] = data
 	return nil
 }
 
@@ -404,10 +364,6 @@ func (sss *SeaStorageState) SeaStoreFile(seaName, publicKey string, operations [
 	if len(addresses) != len(cache) {
 		return &processor.InternalError{Msg: "failed to save data"}
 	}
-	for address, u := range userCache {
-		sss.userCache[address] = u.ToBytes()
-	}
-	sss.seaCache[seaAddress] = s.ToBytes()
 	return nil
 }
 
