@@ -329,8 +329,10 @@ func (root *Root) ShareFiles(p, name, dst string, userOrGroup bool) (map[string]
 	keyIndexes := iNode.GetKeys()
 	for _, keyIndex := range keyIndexes {
 		fileKey := root.Keys.GetKey(keyIndex)
+		if keyUsed[keyIndex] == 0 {
+			keys = append(keys, fileKey.Key)
+		}
 		keyUsed[keyIndex]++
-		keys = append(keys, fileKey.Key)
 	}
 	root.Keys.UpdateKeyUsed(keyUsed)
 	return seaOperations, keys, nil
