@@ -100,7 +100,10 @@ func (h *SeaStorageHandler) Apply(request *processor_pb2.TpProcessRequest, conte
 	case payload.UserUpdateFileKey:
 		return st.UserUpdateFileKey(pl.Name, user, pl.PWD, pl.FileInfo)
 	case payload.UserPublishKey:
-		return st.UserPublishKey(pl.Name, user, pl.Key)
+		if len(pl.Target) != 1 || pl.Target[0] == "" {
+			return &processor.InvalidTransactionError{Msg: "the index of key is nil"}
+		}
+		return st.UserPublishKey(pl.Name, user, pl.Target[0], pl.Key)
 	case payload.UserMove:
 		if len(pl.Target) != 2 || pl.Target[0] == "" || pl.Target[1] == "" {
 			return &processor.InvalidTransactionError{Msg: "the name of file or directory is nil"}

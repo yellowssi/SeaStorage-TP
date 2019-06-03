@@ -170,8 +170,8 @@ func (root *Root) UpdateFileKey(p string, info FileInfo, userOrGroup bool) (map[
 }
 
 // PublishKey publish the key encrypted by public key.
-func (root *Root) PublishKey(publicKey, key string) error {
-	return root.Keys.PublishKey(publicKey, key)
+func (root *Root) PublishKey(publicKey, keyIndex, key string) error {
+	return root.Keys.PublishKey(publicKey, keyIndex, key)
 }
 
 // DeleteFile delete file in the path.

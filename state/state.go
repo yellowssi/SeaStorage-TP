@@ -348,13 +348,13 @@ func (sss *SeaStorageState) UserUpdateFileKey(username, publicKey, p string, inf
 	return sss.saveSeaOperations(address, u.PublicKey, u.ToBytes(), seaOperations)
 }
 
-func (sss *SeaStorageState) UserPublishKey(username, publicKey, key string) error {
+func (sss *SeaStorageState) UserPublishKey(username, publicKey, keyIndex, key string) error {
 	address := MakeAddress(AddressTypeUser, username, publicKey)
 	u, err := sss.GetUser(address)
 	if err != nil {
 		return err
 	}
-	err = u.Root.PublishKey(publicKey, key)
+	err = u.Root.PublishKey(publicKey, keyIndex, key)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}

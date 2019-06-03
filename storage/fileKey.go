@@ -2,7 +2,6 @@ package storage
 
 import (
 	"errors"
-
 	"github.com/yellowssi/SeaStorage-TP/crypto"
 )
 
@@ -18,11 +17,6 @@ type FileKeyMap struct {
 	Keys []*FileKey
 }
 
-// NewFileKey is the construct for FileKey.
-func NewFileKey(key string) *FileKey {
-	return &FileKey{Index: crypto.SHA512HexFromHex(key), Key: key, Used: 0}
-}
-
 // NewFileKeyMap is the construct for FileKeyMap.
 func NewFileKeyMap() *FileKeyMap {
 	return &FileKeyMap{Keys: make([]*FileKey, 0)}
@@ -32,19 +26,6 @@ func NewFileKeyMap() *FileKeyMap {
 // If it exists, it will be return.
 // Else, returns nil.
 func (fkm *FileKeyMap) GetKey(index string) *FileKey {
-	for _, key := range fkm.Keys {
-		if key.Index == index {
-			return key
-		}
-	}
-	return nil
-}
-
-// SearchKey search the FileKey by key it self.
-// If it exists, it will be return.
-// Else, returns nil.
-func (fkm *FileKeyMap) SearchKey(key string) *FileKey {
-	index := crypto.SHA512HexFromHex(key)
 	for _, key := range fkm.Keys {
 		if key.Index == index {
 			return key
@@ -66,9 +47,11 @@ func (fkm *FileKeyMap) AddKey(key string, used bool) string {
 			return index
 		}
 	}
-	fileKey := NewFileKey(key)
+	var fileKey *FileKey
 	if used {
-		fileKey.Used++
+		fileKey = &FileKey{Index: index, Key: key, Used: 1}
+	} else {
+		fileKey = &FileKey{Index: index, Key: key, Used: 0}
 	}
 	fkm.Keys = append(fkm.Keys, fileKey)
 	return index
@@ -97,9 +80,8 @@ func (fkm *FileKeyMap) UpdateKeyUsed(keyUsed map[string]int) {
 }
 
 // PublishKey check key whether valid and publish it.
-func (fkm *FileKeyMap) PublishKey(publicKey, key string) error {
-	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
-	fileKey := fkm.SearchKey(crypto.BytesToHex(keyBytes))
+func (fkm *FileKeyMap) PublishKey(publicKey, keyIndex, key string) error {
+	fileKey := fkm.GetKey(keyIndex)
 	if fileKey != nil {
 		fileKey.Key = key
 		return nil

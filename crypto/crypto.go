@@ -141,6 +141,9 @@ func NewAESKey(len int) string {
 
 func AESKeyEncryptedByPublicKey(key, publicKey string) []byte {
 	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
+	if err != nil {
+		panic(err)
+	}
 	result, err := ellcurv.Encrypt(pub, HexToBytes(key))
 	if err != nil {
 		panic(err)
