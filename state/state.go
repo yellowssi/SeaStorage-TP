@@ -197,11 +197,12 @@ func (sss *SeaStorageState) saveSea(s *sea.Sea, address string) error {
 }
 
 func (sss *SeaStorageState) saveSeaOperations(address, publicKey string, data []byte, seaOperations map[string][]*sea.Operation) error {
+	var err error
 	seaCache := make(map[string]*sea.Sea)
 	for seaAddr, operations := range seaOperations {
 		s, ok := seaCache[seaAddr]
 		if !ok {
-			s, err := sss.GetSea(seaAddr)
+			s, err = sss.GetSea(seaAddr)
 			if err != nil {
 				return err
 			}

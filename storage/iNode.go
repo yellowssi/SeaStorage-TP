@@ -285,7 +285,7 @@ func (d *Directory) DeleteDirectoryKey() map[string]int {
 		switch iNode.(type) {
 		case *Directory:
 			for k, v := range iNode.(*Directory).DeleteDirectoryKey() {
-				operations[k] -= v
+				operations[k] += v
 			}
 		case *File:
 			file := iNode.(*File)
