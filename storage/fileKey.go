@@ -7,9 +7,10 @@ import (
 
 // FileKey store the information of key used to encrypt file.
 type FileKey struct {
-	Index string
-	Used  int
-	Key   string
+	Index     string
+	Used      int
+	Key       string
+	Published bool
 }
 
 // FileKeyMap provides file keys manage.
@@ -84,6 +85,7 @@ func (fkm *FileKeyMap) PublishKey(publicKey, keyIndex, key string) error {
 	fileKey := fkm.GetKey(keyIndex)
 	if fileKey != nil {
 		fileKey.Key = key
+		fileKey.Published = true
 		return nil
 	}
 	return errors.New("invalid key or not exists")
