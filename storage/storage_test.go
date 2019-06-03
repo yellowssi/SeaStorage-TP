@@ -94,6 +94,13 @@ func TestRoot_ShareFiles(t *testing.T) {
 	t.Log(root.Shared.ToJson())
 }
 
+func TestRoot_PublishKey(t *testing.T) {
+	err := root.PublishKey("publicKey", "key")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestRoot_DeleteFile(t *testing.T) {
 	seaOperations, err := root.DeleteFile("/home/SeaStorage/", "test", true)
 	if err != nil {

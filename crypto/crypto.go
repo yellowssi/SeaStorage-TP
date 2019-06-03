@@ -15,7 +15,6 @@
 package crypto
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/rand"
 	"crypto/sha256"
@@ -147,18 +146,6 @@ func AESKeyEncryptedByPublicKey(key, publicKey string) []byte {
 		panic(err)
 	}
 	return result
-}
-
-func AESKeyVerify(publicKey, key, encryptedKey string) bool {
-	pub, err := ellcurv.ParsePubKey(HexToBytes(publicKey), ellcurv.S256())
-	if err != nil {
-		panic(err.Error())
-	}
-	result, err := ellcurv.Encrypt(pub, HexToBytes(key))
-	if err != nil {
-		panic(err.Error())
-	}
-	return bytes.Equal(result, HexToBytes(encryptedKey))
 }
 
 func AESKeyEncryption(key, data string) (result []byte, err error) {

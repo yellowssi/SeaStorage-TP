@@ -101,10 +101,8 @@ func (fkm *FileKeyMap) PublishKey(publicKey, key string) error {
 	keyBytes := crypto.AESKeyEncryptedByPublicKey(key, publicKey)
 	fileKey := fkm.SearchKey(crypto.BytesToHex(keyBytes))
 	if fileKey != nil {
-		if crypto.AESKeyVerify(publicKey, key, fileKey.Key) {
-			fileKey.Key = key
-			return nil
-		}
+		fileKey.Key = key
+		return nil
 	}
 	return errors.New("invalid key or not exists")
 }
